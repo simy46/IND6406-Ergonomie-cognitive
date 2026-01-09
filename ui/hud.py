@@ -101,8 +101,7 @@ def render_hud(screen, telemetry, active_drive_mode):
     y = 20
     line_gap = 22
 
-    extra_lines = 2 if telemetry.selected_mode == "takeover" else 0
-    panel_height = 250 + (extra_lines * line_gap)
+    panel_height = 230
     panel_rect = pygame.Rect(x, y, 380, panel_height)
     _draw_panel(screen, panel_rect)
     content_x = panel_rect.x + 16
@@ -127,63 +126,58 @@ def render_hud(screen, telemetry, active_drive_mode):
     screen.blit(drive_text, (content_x + 180, content_y))
     content_y += line_gap + 8
 
-    route_label = font_small.render("Route tracking", True, MUTED_TEXT)
-    screen.blit(route_label, (content_x, content_y))
-    content_y += line_gap - 6
+    grid_x1 = content_x
+    grid_x2 = content_x + 190
+    row1_y = content_y
+    row2_y = content_y + line_gap
+    row3_y = content_y + (line_gap * 2)
+
     on_route_text = font.render(
         f"On route {telemetry.get_percent_in_lane():.1f}%",
         True,
         TEXT_COLOR,
     )
-    screen.blit(on_route_text, (content_x, content_y))
-    content_y += line_gap
+    screen.blit(on_route_text, (grid_x1, row1_y))
     offset_text = font.render(
         f"Avg offset {telemetry.get_lane_offset_mean():.2f} m",
         True,
         TEXT_COLOR,
     )
-    screen.blit(offset_text, (content_x, content_y))
-    content_y += line_gap + 4
-
-    incidents_label = font_small.render("Incidents", True, MUTED_TEXT)
-    screen.blit(incidents_label, (content_x, content_y))
-    content_y += line_gap - 6
-    invasions_text = font.render(
-        f"Lane invasions {telemetry.lane_invasion_count}",
+    screen.blit(offset_text, (grid_x1, row2_y))
+    time_split_text = font.render(
+        f"Manual {telemetry.manual_time_seconds:.1f}s  Auto {telemetry.auto_time_seconds:.1f}s",
         True,
         TEXT_COLOR,
     )
-    screen.blit(invasions_text, (content_x, content_y))
-    content_y += line_gap
+    screen.blit(time_split_text, (grid_x1, row3_y))
+
+    invasions_text = font.render(
+        f"Lane inv. {telemetry.lane_invasion_count}",
+        True,
+        TEXT_COLOR,
+    )
+    screen.blit(invasions_text, (grid_x2, row1_y))
     collisions_text = font.render(
         f"Collisions {telemetry.collision_count}",
         True,
         TEXT_COLOR,
     )
-    screen.blit(collisions_text, (content_x, content_y))
-    content_y += line_gap + 4
-
-    time_label = font_small.render("Time split", True, MUTED_TEXT)
-    screen.blit(time_label, (content_x, content_y))
-    content_y += line_gap - 6
-    manual_time_text = font.render(
-        f"Manual {telemetry.manual_time_seconds:.1f}s",
-        True,
-        TEXT_COLOR,
-    )
-    screen.blit(manual_time_text, (content_x, content_y))
-    content_y += line_gap
-    auto_time_text = font.render(
-        f"Auto {telemetry.auto_time_seconds:.1f}s",
-        True,
-        TEXT_COLOR,
-    )
-    screen.blit(auto_time_text, (content_x, content_y))
+    screen.blit(collisions_text, (grid_x2, row2_y))
+    if telemetry.selected_mode == "takeover":
+        requested = "YES" if telemetry.takeover_requested else "NO"
+        reaction = telemetry.get_takeover_reaction_time()
+        reaction_text = "N/A" if reaction is None else f"{reaction:.2f}s"
+        takeover_text = font.render(
+            f"Takeover {requested} {reaction_text}",
+            True,
+            TEXT_COLOR,
+        )
+        screen.blit(takeover_text, (grid_x2, row3_y))
 
     timer_big = pygame.font.SysFont(None, 48).render(timer_text, True, SPEED_COLOR)
     time_rect = timer_big.get_rect(bottomright=(screen.get_width() - 20, screen.get_height() - 20))
     screen.blit(timer_big, time_rect)
-    distance_big = pygame.font.SysFont(None, 38).render(
+    distance_big = pygame.font.SysFont(None, 48).render(
         f"{telemetry.distance_traveled_meters:.1f} m",
         True,
         TEXT_COLOR,
@@ -193,14 +187,3 @@ def render_hud(screen, telemetry, active_drive_mode):
 
     speed_rect = pygame.Rect(16, screen.get_height() - 200, 260, 190)
     _draw_speedometer(screen, speed_rect, telemetry.current_speed_kmh)
-    if telemetry.selected_mode == "takeover":
-        requested = "YES" if telemetry.takeover_requested else "NO"
-        reaction = telemetry.get_takeover_reaction_time()
-        reaction_text = "N/A"
-        if reaction is not None:
-            reaction_text = f"{reaction:.2f}s"
-        takeover_line = f"Takeover requested: {requested}"
-        screen.blit(font_small.render(takeover_line, True, TEXT_COLOR), (content_x, content_y))
-        content_y += line_gap
-        reaction_line = f"Reaction time: {reaction_text}"
-        screen.blit(font_small.render(reaction_line, True, TEXT_COLOR), (content_x, content_y))
