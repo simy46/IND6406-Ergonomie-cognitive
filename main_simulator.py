@@ -17,7 +17,7 @@ from core.route_visualizer import draw_route, draw_destination
 from core.camera import CameraRGB
 from core.pause import PauseController
 from input.steering_wheel import SteeringWheel
-from ui.hud import draw_hud_message, render_hud
+from ui.hud import draw_center_message, render_hud
 from ui.pause import render_pause_screen
 
 
@@ -129,10 +129,9 @@ def main():
         render_hud(screen, mission_manager.telemetry, mission_manager.active_drive_mode)
 
         if mission_manager.show_restart_prompt:
-            draw_hud_message(
+            draw_center_message(
                 screen,
                 "Mission terminée: Appuyez sur [ESPACE]",
-                position=(80, 30),
                 color=(0, 220, 255),
             )
 
