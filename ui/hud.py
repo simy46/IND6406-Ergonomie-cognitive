@@ -126,11 +126,13 @@ def render_hud(screen, telemetry, active_drive_mode):
     screen.blit(drive_text, (content_x + 180, content_y))
     content_y += line_gap + 8
 
-    col_gap = 32
+    block_gap = 28
+    col_gap = block_gap
     col_width = 160
     col1_x = content_x
     col2_x = content_x + col_width + col_gap
-    row_gap = (line_gap * 2) + 6
+    block_height = (line_gap * 2) + 6
+    row_gap = block_height + block_gap
     row1_y = content_y
     row2_y = content_y + row_gap
 
