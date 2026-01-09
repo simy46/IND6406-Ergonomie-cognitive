@@ -93,7 +93,7 @@ def draw_center_message(screen, text, color=(0, 220, 255), font_size=40):
     screen.blit(msg, rect)
 
 
-def render_hud(screen, telemetry, active_drive_mode):
+def render_hud(screen, telemetry, active_drive_mode, hud_visible=True):
     if telemetry is None:
         return
     font = pygame.font.SysFont(None, 24)
@@ -105,7 +105,8 @@ def render_hud(screen, telemetry, active_drive_mode):
 
     panel_height = 230
     panel_rect = pygame.Rect(x, y, 380, panel_height)
-    _draw_panel(screen, panel_rect)
+    if hud_visible:
+        _draw_panel(screen, panel_rect)
     content_x = panel_rect.x + 16
     content_y = panel_rect.y + 14
 
@@ -113,20 +114,21 @@ def render_hud(screen, telemetry, active_drive_mode):
     minutes = int(elapsed // 60)
     seconds = int(elapsed % 60)
     timer_text = f"{minutes:02d}:{seconds:02d}"
-    name_text = font_name.render(telemetry.student_name, True, TEXT_COLOR)
-    screen.blit(name_text, (content_x, content_y))
-    content_y += line_gap + 6
+    if hud_visible:
+        name_text = font_name.render(telemetry.student_name, True, TEXT_COLOR)
+        screen.blit(name_text, (content_x, content_y))
+        content_y += line_gap + 6
 
-    scenario_key = font_small.render("Scenario", True, MUTED_TEXT)
-    drive_key = font_small.render("Drive mode", True, MUTED_TEXT)
-    screen.blit(scenario_key, (content_x, content_y))
-    screen.blit(drive_key, (content_x + 180, content_y))
-    content_y += line_gap - 6
-    scenario_text = font.render(telemetry.selected_mode, True, TEXT_COLOR)
-    drive_text = font.render(active_drive_mode, True, TEXT_COLOR)
-    screen.blit(scenario_text, (content_x, content_y))
-    screen.blit(drive_text, (content_x + 180, content_y))
-    content_y += line_gap + 8
+        scenario_key = font_small.render("Scenario", True, MUTED_TEXT)
+        drive_key = font_small.render("Drive mode", True, MUTED_TEXT)
+        screen.blit(scenario_key, (content_x, content_y))
+        screen.blit(drive_key, (content_x + 180, content_y))
+        content_y += line_gap - 6
+        scenario_text = font.render(telemetry.selected_mode, True, TEXT_COLOR)
+        drive_text = font.render(active_drive_mode, True, TEXT_COLOR)
+        screen.blit(scenario_text, (content_x, content_y))
+        screen.blit(drive_text, (content_x + 180, content_y))
+        content_y += line_gap + 8
 
     block_gap = 28
     col_gap = block_gap
@@ -147,43 +149,44 @@ def render_hud(screen, telemetry, active_drive_mode):
             screen.blit(val, (x_pos, line_y))
             line_y += line_gap
 
-    draw_block(
-        "Route tracking",
-        [
-            f"On route {telemetry.get_percent_in_lane():.1f}%",
-            f"Avg offset {telemetry.get_lane_offset_mean():.2f} m",
-        ],
-        col1_x,
-        row1_y,
-    )
-    draw_block(
-        "Incidents",
-        [
-            f"Lane invasions {telemetry.lane_invasion_count}",
-            f"Collisions {telemetry.collision_count}",
-        ],
-        col2_x,
-        row1_y,
-    )
-    draw_block(
-        "Time split",
-        [
-            f"Manual {telemetry.manual_time_seconds:.1f}s",
-            f"Auto {telemetry.auto_time_seconds:.1f}s",
-        ],
-        col1_x,
-        row2_y,
-    )
-    if telemetry.selected_mode == MODE_TAKEOVER:
-        requested = "YES" if telemetry.takeover_requested else "NO"
-        reaction = telemetry.get_takeover_reaction_time()
-        reaction_text = "N/A" if reaction is None else f"{reaction:.2f}s"
+    if hud_visible:
         draw_block(
-            "Takeover",
-            [f"Requested {requested}", f"Reaction {reaction_text}"],
+            "Route tracking",
+            [
+                f"On route {telemetry.get_percent_in_lane():.1f}%",
+                f"Avg offset {telemetry.get_lane_offset_mean():.2f} m",
+            ],
+            col1_x,
+            row1_y,
+        )
+        draw_block(
+            "Incidents",
+            [
+                f"Lane invasions {telemetry.lane_invasion_count}",
+                f"Collisions {telemetry.collision_count}",
+            ],
             col2_x,
+            row1_y,
+        )
+        draw_block(
+            "Time split",
+            [
+                f"Manual {telemetry.manual_time_seconds:.1f}s",
+                f"Auto {telemetry.auto_time_seconds:.1f}s",
+            ],
+            col1_x,
             row2_y,
         )
+        if telemetry.selected_mode == MODE_TAKEOVER:
+            requested = "YES" if telemetry.takeover_requested else "NO"
+            reaction = telemetry.get_takeover_reaction_time()
+            reaction_text = "N/A" if reaction is None else f"{reaction:.2f}s"
+            draw_block(
+                "Takeover",
+                [f"Requested {requested}", f"Reaction {reaction_text}"],
+                col2_x,
+                row2_y,
+            )
 
     timer_big = pygame.font.SysFont(None, 48).render(timer_text, True, SPEED_COLOR)
     time_rect = timer_big.get_rect(bottomright=(screen.get_width() - 20, screen.get_height() - 20))
