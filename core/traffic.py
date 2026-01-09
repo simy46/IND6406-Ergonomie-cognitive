@@ -57,6 +57,9 @@ class TrafficController:
                 if keep:
                     filtered.append(sp)
             spawn_points = filtered
+        if not spawn_points:
+            print("[TRAFFIC][WARN] No spawn points after filtering; traffic disabled.")
+            return
         random.shuffle(spawn_points)
 
         traffic_manager = self.client.get_trafficmanager()
