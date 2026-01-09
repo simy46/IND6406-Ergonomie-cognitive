@@ -1,7 +1,7 @@
 import pygame
 
 
-def render_pause_screen(screen, message="PAUSED: Press [P] to resume"):
+def render_pause_screen(screen, message="PAUSE: Clique sur [P] pour continuer"):
     width, height = screen.get_size()
     screen.fill((0, 0, 0))
     font = pygame.font.SysFont(None, 44)

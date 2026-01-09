@@ -4,11 +4,12 @@ from core.constants import MODE_MANUAL, MODE_AUTOMATIC, MODE_TAKEOVER
 
 def mission_popup(screen, clock):
     WIDTH, HEIGHT = screen.get_size()
-    POP_W, POP_H = 600, 470
+    POP_W, POP_H = 620, 500
     POP_X = (WIDTH - POP_W) // 2
     POP_Y = (HEIGHT - POP_H) // 2
 
-    font_title = pygame.font.SysFont(None, 42)
+    font_title = pygame.font.SysFont(None, 44)
+    font_subtitle = pygame.font.SysFont(None, 28)
     font = pygame.font.SysFont(None, 32)
     font_small = pygame.font.SysFont(None, 22)
 
@@ -84,8 +85,12 @@ def mission_popup(screen, clock):
         # TITLE
         # =========================
         screen.blit(
-            font_title.render("Nouvelle mission !", True, (0, 220, 255)),
-            (POP_X + 180, POP_Y + 25)
+            font_title.render("IND6406 - Ergonomie cognitive", True, (0, 220, 255)),
+            (POP_X + 70, POP_Y + 20)
+        )
+        screen.blit(
+            font_subtitle.render("Nouvelle mission", True, (200, 200, 200)),
+            (POP_X + 210, POP_Y + 60)
         )
 
         # =========================
@@ -93,33 +98,33 @@ def mission_popup(screen, clock):
         # =========================
         screen.blit(
             font.render("Nom de l'élève (pour fichier_nom.csv) :", True, (220, 220, 220)),
-            (POP_X + 80, POP_Y + 90)
+            (POP_X + 80, POP_Y + 110)
         )
 
         pygame.draw.rect(
             screen,
             (255, 255, 255),
-            (POP_X + 80, POP_Y + 125, 440, 40),
+            (POP_X + 80, POP_Y + 145, 460, 40),
             2,
             border_radius=6
         )
 
         screen.blit(
             font.render(name, True, (255, 255, 255)),
-            (POP_X + 90, POP_Y + 132)
+            (POP_X + 90, POP_Y + 152)
         )
 
         # =========================
         # MODE BUTTONS
         # =========================
         for i, (mode_key, label) in enumerate(modes):
-            y = POP_Y + 220 + i * 55
+            y = POP_Y + 235 + i * 55
             is_selected = (selected_mode == mode_key)
 
             pygame.draw.rect(
                 screen,
                 (0, 160, 200) if is_selected else (50, 50, 50),
-                (POP_X + 80, y, 440, 45),
+                (POP_X + 80, y, 460, 45),
                 border_radius=8
             )
 
@@ -129,7 +134,7 @@ def mission_popup(screen, clock):
             )
 
         checkbox_x = POP_X + 80
-        checkbox_y = POP_Y + 220 + len(modes) * 55 + 10
+        checkbox_y = POP_Y + 235 + len(modes) * 55 + 10
         checkbox_size = 24
         pygame.draw.rect(
             screen,
@@ -159,7 +164,7 @@ def mission_popup(screen, clock):
 
         screen.blit(
             font_small.render(hint, True, (180, 180, 180)),
-            (POP_X + 170, POP_Y + POP_H - 35)
+            (POP_X + 150, POP_Y + POP_H - 35)
         )
 
         pygame.display.flip()
