@@ -93,7 +93,9 @@ def render_hud(screen, telemetry, active_drive_mode):
     y = 20
     line_gap = 22
 
-    panel_rect = pygame.Rect(x, y, 360, 260)
+    extra_lines = 2 if telemetry.selected_mode == "takeover" else 0
+    panel_height = 260 + (extra_lines * line_gap)
+    panel_rect = pygame.Rect(x, y, 360, panel_height)
     _draw_panel(screen, panel_rect)
     content_x = panel_rect.x + 16
     content_y = panel_rect.y + 14
@@ -119,10 +121,7 @@ def render_hud(screen, telemetry, active_drive_mode):
         screen.blit(font.render(line, True, TEXT_COLOR), (content_x, content_y))
         content_y += line_gap
 
-    speed_rect = pygame.Rect(x, panel_rect.bottom + 14, 360, 220)
-    _draw_panel(screen, speed_rect)
-    label_text = font_small.render("SPEEDOMETER", True, MUTED_TEXT)
-    screen.blit(label_text, (speed_rect.x + 16, speed_rect.y + 10))
+    speed_rect = pygame.Rect(x, panel_rect.bottom + 10, 220, 160)
     _draw_speedometer(screen, speed_rect, telemetry.current_speed_kmh)
     if telemetry.selected_mode == "takeover":
         requested = "YES" if telemetry.takeover_requested else "NO"
