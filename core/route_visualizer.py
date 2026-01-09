@@ -17,9 +17,9 @@ def draw_destination(world, location, life_time=1.1):
     world.debug.draw_arrow(
         start,
         end,
-        thickness=0.14,
-        arrow_size=0.45,
-        color=carla.Color(255, 255, 255),
+        thickness=0.08,
+        arrow_size=0.28,
+        color=carla.Color(235, 235, 235),
         life_time=life_time
     )
 
