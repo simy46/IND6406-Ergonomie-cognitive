@@ -82,75 +82,80 @@ def main():
             if sync_enabled and not pause_controller.paused:
                 world.tick()
 
-        # -------------------------
-        # EVENTS
-        # -------------------------
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
+            # -------------------------
+            # EVENTS
+            # -------------------------
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
 
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_p:
-                    if mission_manager.mission_active:
-                        pause_controller.toggle()
-                    continue
-                if event.key in (pygame.K_LCTRL, pygame.K_RCTRL):
-                    hud_visible = not hud_visible
-                    continue
-                if pause_controller.paused:
-                    continue
-                if event.key == pygame.K_TAB:
-                    camera.toggle()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_p:
+                        if mission_manager.mission_active:
+                            pause_controller.toggle()
+                        continue
+                    if event.key in (pygame.K_LCTRL, pygame.K_RCTRL):
+                        hud_visible = not hud_visible
+                        continue
+                    if pause_controller.paused:
+                        continue
+                    if event.key == pygame.K_TAB:
+                        camera.toggle()
 
-                elif mission_manager.mission_active and event.key == pygame.K_ESCAPE:
-                    mission_manager.handle_escape()
+                    elif mission_manager.mission_active and event.key == pygame.K_ESCAPE:
+                        mission_manager.handle_escape()
 
-                elif mission_manager.show_restart_prompt and event.key == pygame.K_SPACE:
-                    mission_manager.reset_state_to_menu()
+                    elif mission_manager.show_restart_prompt and event.key == pygame.K_SPACE:
+                        mission_manager.reset_state_to_menu()
 
-        # =========================
-        # MISSION POPUP
-        # =========================
-        if mission_manager.in_menu:
-            if not mission_manager.run_menu(screen, clock):
-                break
+            # =========================
+            # MISSION POPUP
+            # =========================
+            if mission_manager.in_menu:
+                if not mission_manager.run_menu(screen, clock):
+                    break
 
-        if pause_controller.paused:
-            render_pause_screen(screen)
-            pygame.display.flip()
-            continue
+            if pause_controller.paused:
+                render_pause_screen(screen)
+                pygame.display.flip()
+                continue
 
-        # =========================
-        # RUN MODE
-        # =========================
-        mission_manager.run_mission_mode()
-        mission_manager.update_telemetry(dt)
+            # =========================
+            # RUN MODE
+            # =========================
+            mission_manager.run_mission_mode()
+            mission_manager.update_telemetry(dt)
 
-        # =========================
-        # DEBUG DRAW (1 Hz)
-        # =========================
-        if mission_manager.should_draw_debug(now):
-            draw_route(world, mission_manager.route)
-            draw_destination(world, mission_manager.destination.location)
+            # =========================
+            # DEBUG DRAW (1 Hz)
+            # =========================
+            if mission_manager.should_draw_debug(now):
+                draw_route(world, mission_manager.route)
+                draw_destination(world, mission_manager.destination.location)
 
-        # =========================
-        # MISSION END CHECK
-        # =========================
-        mission_manager.check_end()
+            # =========================
+            # MISSION END CHECK
+            # =========================
+            mission_manager.check_end()
 
-        # =========================
-        # RENDER
-        # =========================
-        screen.fill((0, 0, 0))
-        camera.render(screen)
-        render_hud(screen, mission_manager.telemetry, mission_manager.active_drive_mode, hud_visible=hud_visible)
-
-        if mission_manager.show_restart_prompt:
-            draw_center_message(
+            # =========================
+            # RENDER
+            # =========================
+            screen.fill((0, 0, 0))
+            camera.render(screen)
+            render_hud(
                 screen,
-                "Mission terminée: Appuyez sur [ESPACE]",
-                color=(0, 220, 255),
+                mission_manager.telemetry,
+                mission_manager.active_drive_mode,
+                hud_visible=hud_visible,
             )
+
+            if mission_manager.show_restart_prompt:
+                draw_center_message(
+                    screen,
+                    "Mission terminée: Appuyez sur [ESPACE]",
+                    color=(0, 220, 255),
+                )
 
             pygame.display.flip()
 
