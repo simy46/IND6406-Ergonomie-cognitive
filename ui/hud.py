@@ -87,15 +87,15 @@ def draw_hud_message(
 def render_hud(screen, telemetry, active_drive_mode):
     if telemetry is None:
         return
-    font = pygame.font.SysFont(None, 26)
-    font_small = pygame.font.SysFont(None, 22)
+    font = pygame.font.SysFont(None, 24)
+    font_small = pygame.font.SysFont(None, 20)
     x = 20
     y = 20
-    line_gap = 24
+    line_gap = 22
 
     extra_lines = 2 if telemetry.selected_mode == "takeover" else 0
-    panel_height = 230 + (extra_lines * line_gap)
-    panel_rect = pygame.Rect(x, y, 360, panel_height)
+    panel_height = 250 + (extra_lines * line_gap)
+    panel_rect = pygame.Rect(x, y, 380, panel_height)
     _draw_panel(screen, panel_rect)
     content_x = panel_rect.x + 16
     content_y = panel_rect.y + 14
@@ -108,69 +108,69 @@ def render_hud(screen, telemetry, active_drive_mode):
     screen.blit(name_text, (content_x, content_y))
     content_y += line_gap
 
-    scenario_text = font.render(f"{telemetry.selected_mode}", True, TEXT_COLOR)
-    drive_text = font.render(f"{active_drive_mode}", True, TEXT_COLOR)
+    scenario_text = font.render(telemetry.selected_mode, True, TEXT_COLOR)
+    drive_text = font.render(active_drive_mode, True, TEXT_COLOR)
     screen.blit(scenario_text, (content_x, content_y))
-    screen.blit(drive_text, (content_x + 170, content_y))
-    content_y += line_gap + 2
+    screen.blit(drive_text, (content_x + 160, content_y))
+    content_y += line_gap + 6
 
     route_label = font_small.render("Route tracking", True, MUTED_TEXT)
     screen.blit(route_label, (content_x, content_y))
     content_y += line_gap - 6
     on_route_text = font.render(
-        f"On route: {telemetry.get_percent_in_lane():.1f}%",
+        f"On route {telemetry.get_percent_in_lane():.1f}%",
         True,
         TEXT_COLOR,
     )
     screen.blit(on_route_text, (content_x, content_y))
     content_y += line_gap
     offset_text = font.render(
-        f"Avg offset: {telemetry.get_lane_offset_mean():.2f} m",
+        f"Avg offset {telemetry.get_lane_offset_mean():.2f} m",
         True,
         TEXT_COLOR,
     )
     screen.blit(offset_text, (content_x, content_y))
-    content_y += line_gap
+    content_y += line_gap + 4
 
     incidents_label = font_small.render("Incidents", True, MUTED_TEXT)
     screen.blit(incidents_label, (content_x, content_y))
     content_y += line_gap - 6
     invasions_text = font.render(
-        f"Lane invasions: {telemetry.lane_invasion_count}",
+        f"Lane invasions {telemetry.lane_invasion_count}",
         True,
         TEXT_COLOR,
     )
     screen.blit(invasions_text, (content_x, content_y))
     content_y += line_gap
     collisions_text = font.render(
-        f"Collisions: {telemetry.collision_count}",
+        f"Collisions {telemetry.collision_count}",
         True,
         TEXT_COLOR,
     )
     screen.blit(collisions_text, (content_x, content_y))
-    content_y += line_gap
+    content_y += line_gap + 4
 
     time_label = font_small.render("Time split", True, MUTED_TEXT)
     screen.blit(time_label, (content_x, content_y))
     content_y += line_gap - 6
     manual_time_text = font.render(
-        f"Manual: {telemetry.manual_time_seconds:.1f}s",
+        f"Manual {telemetry.manual_time_seconds:.1f}s",
         True,
         TEXT_COLOR,
     )
     screen.blit(manual_time_text, (content_x, content_y))
     content_y += line_gap
     auto_time_text = font.render(
-        f"Auto: {telemetry.auto_time_seconds:.1f}s",
+        f"Auto {telemetry.auto_time_seconds:.1f}s",
         True,
         TEXT_COLOR,
     )
     screen.blit(auto_time_text, (content_x, content_y))
 
-    timer_big = pygame.font.SysFont(None, 40).render(timer_text, True, SPEED_COLOR)
+    timer_big = pygame.font.SysFont(None, 48).render(timer_text, True, SPEED_COLOR)
     time_rect = timer_big.get_rect(bottomright=(screen.get_width() - 20, screen.get_height() - 20))
     screen.blit(timer_big, time_rect)
-    distance_big = pygame.font.SysFont(None, 32).render(
+    distance_big = pygame.font.SysFont(None, 38).render(
         f"{telemetry.distance_traveled_meters:.1f} m",
         True,
         TEXT_COLOR,
