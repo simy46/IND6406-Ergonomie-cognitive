@@ -12,6 +12,7 @@ class SteeringWheel:
         self.throttle_curve = 1.4
         self.brake_curve = 1.2
         self.brake_boost = 0.2
+        self._pedal_rest = {}
 
         pygame.joystick.init()
         count = pygame.joystick.get_count()
@@ -25,9 +26,22 @@ class SteeringWheel:
 
         print(f"[STEERING][OK] Device: {self.joy.get_name()}")
         print(f"[STEERING] Axes: {self.joy.get_numaxes()}")
+        self._calibrate_pedals()
 
-    def _normalize_pedal(self, raw, curve=1.0, boost=0.0):
-        value = max(0.0, (1 - raw) / 2)
+    def _calibrate_pedals(self):
+        self._pedal_rest = {
+            "throttle": self.joy.get_axis(1),
+            "brake": self.joy.get_axis(2),
+            "reverse": self.joy.get_axis(3),
+        }
+
+    def _normalize_pedal(self, raw, rest_value, curve=1.0, boost=0.0):
+        denom = rest_value - (-1.0)
+        if abs(denom) < 1e-6:
+            value = 0.0
+        else:
+            value = (rest_value - raw) / denom
+        value = max(0.0, min(1.0, value))
         if value <= 0.0:
             return 0.0
         value = min(1.0, value + boost)
@@ -44,9 +58,22 @@ class SteeringWheel:
         brake_raw = self.joy.get_axis(2)   # pédale milieu
         reverse_raw = self.joy.get_axis(3) # pédale gauche
 
-        throttle = self._normalize_pedal(accel_raw, curve=self.throttle_curve)
-        brake = self._normalize_pedal(brake_raw, curve=self.brake_curve, boost=self.brake_boost)
-        reverse = self._normalize_pedal(reverse_raw, curve=self.throttle_curve)
+        throttle = self._normalize_pedal(
+            accel_raw,
+            self._pedal_rest.get("throttle", 1.0),
+            curve=self.throttle_curve,
+        )
+        brake = self._normalize_pedal(
+            brake_raw,
+            self._pedal_rest.get("brake", 1.0),
+            curve=self.brake_curve,
+            boost=self.brake_boost,
+        )
+        reverse = self._normalize_pedal(
+            reverse_raw,
+            self._pedal_rest.get("reverse", 1.0),
+            curve=self.throttle_curve,
+        )
 
         # deadzones
         steer = 0.0 if abs(steer) < self.steer_deadzone else steer

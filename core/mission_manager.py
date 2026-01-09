@@ -15,6 +15,7 @@ from core.constants import (
     TRAFFIC_PEDESTRIANS,
     TRAFFIC_MIN_DISTANCE_FROM_EGO,
     TRAFFIC_MIN_DISTANCE_FROM_ROUTE,
+    TRAFFIC_AVOID_ROUTE_ROADS,
 )
 from core.traffic import TrafficController
 from core.telemetry import Telemetry
@@ -126,7 +127,9 @@ class MissionManager:
         self.route = compute_route(self.world, self.start.location, self.destination.location)
         self.reset_vehicle_to_spawn(self.start)
         avoid_locations = [wp.transform.location for wp, _ in self.route]
-        avoid_road_ids = {wp.road_id for wp, _ in self.route}
+        avoid_road_ids = None
+        if TRAFFIC_AVOID_ROUTE_ROADS:
+            avoid_road_ids = {wp.road_id for wp, _ in self.route}
         self.traffic_controller.apply(
             traffic_enabled,
             self.vehicle.get_location(),
