@@ -10,8 +10,8 @@ class SteeringWheel:
         self.brake_deadzone = 0.02
         self.reverse_deadzone = 0.03
         self.throttle_curve = 1.4
-        self.brake_curve = 1.8
-        self.brake_boost = 0.12
+        self.brake_curve = 1.2
+        self.brake_boost = 0.2
 
         pygame.joystick.init()
         count = pygame.joystick.get_count()
