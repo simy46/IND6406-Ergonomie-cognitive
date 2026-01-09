@@ -14,7 +14,8 @@ class CameraRGB:
             carla.Transform(carla.Location(x=0.3, z=1.2),
                             carla.Rotation(pitch=0.0, yaw=0.0, roll=0.0)), # inside with steering wheel
             carla.Transform(carla.Location(x=1.3, z=1.5)),  # inside no steering wheel
-            carla.Transform(carla.Location(x=-6.0, z=2.5)), # from outside
+            carla.Transform(carla.Location(x=-2.5, z=1.4),
+                            carla.Rotation(pitch=0.0, yaw=180.0, roll=0.0)), # rear view
             carla.Transform(carla.Location(z=15.0), # from above
                             carla.Rotation(pitch=-90))
         ]
