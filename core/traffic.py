@@ -20,10 +20,10 @@ class TrafficController:
         self.min_distance_from_route = float(min_distance_from_route)
         self.actors = []
 
-    def apply(self, enabled, reference_location=None, avoid_locations=None):
+    def apply(self, enabled, reference_location=None, avoid_locations=None, avoid_road_ids=None):
         if enabled:
             if not self.actors:
-                self._spawn_traffic(reference_location, avoid_locations)
+                self._spawn_traffic(reference_location, avoid_locations, avoid_road_ids)
         else:
             self.destroy_all()
 
@@ -37,7 +37,7 @@ class TrafficController:
                 pass
         self.actors = []
 
-    def _spawn_traffic(self, reference_location=None, avoid_locations=None):
+    def _spawn_traffic(self, reference_location=None, avoid_locations=None, avoid_road_ids=None):
         self.destroy_all()
         blueprint_library = self.world.get_blueprint_library()
         spawn_points = self.world.get_map().get_spawn_points()
@@ -56,6 +56,19 @@ class TrafficController:
                         break
                 if keep:
                     filtered.append(sp)
+            spawn_points = filtered
+        if avoid_road_ids:
+            filtered = []
+            carla_map = self.world.get_map()
+            for sp in spawn_points:
+                waypoint = carla_map.get_waypoint(
+                    sp.location,
+                    project_to_road=True,
+                    lane_type=carla.LaneType.Driving,
+                )
+                if waypoint is None or waypoint.road_id in avoid_road_ids:
+                    continue
+                filtered.append(sp)
             spawn_points = filtered
         if not spawn_points:
             print("[TRAFFIC][WARN] No spawn points after filtering; traffic disabled.")
