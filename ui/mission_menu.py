@@ -88,10 +88,6 @@ def mission_popup(screen, clock):
             font_title.render("IND6406 - Ergonomie cognitive", True, (0, 220, 255)),
             (POP_X + 70, POP_Y + 20)
         )
-        screen.blit(
-            font_subtitle.render("Nouvelle mission", True, (200, 200, 200)),
-            (POP_X + 210, POP_Y + 60)
-        )
 
         # =========================
         # NAME INPUT
