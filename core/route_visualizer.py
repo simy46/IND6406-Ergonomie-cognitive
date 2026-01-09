@@ -12,9 +12,25 @@ def draw_route(world, route, life_time=1.1):
 
 
 def draw_destination(world, location, life_time=1.1):
-    world.debug.draw_point(
-        location + carla.Location(z=1.0),
-        size=0.3,
+    waypoint = world.get_map().get_waypoint(
+        location,
+        project_to_road=True,
+        lane_type=carla.LaneType.Driving,
+    )
+    forward = carla.Vector3D(1.0, 0.0, 0.0)
+    if waypoint is not None:
+        forward = waypoint.transform.get_forward_vector()
+    start = location + carla.Location(z=0.2)
+    end = start + carla.Location(
+        x=forward.x * 2.0,
+        y=forward.y * 2.0,
+        z=0.2,
+    )
+    world.debug.draw_arrow(
+        start,
+        end,
+        thickness=0.2,
+        arrow_size=0.5,
         color=carla.Color(255, 80, 80),
         life_time=life_time
     )
