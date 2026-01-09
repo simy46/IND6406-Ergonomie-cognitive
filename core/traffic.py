@@ -3,17 +3,18 @@ import carla
 
 
 class TrafficController:
-    def __init__(self, client, world, vehicle_count, walker_count):
+    def __init__(self, client, world, vehicle_count, walker_count, min_distance_from_ego):
         self.client = client
         self.world = world
         self.vehicle_count = int(vehicle_count)
         self.walker_count = int(walker_count)
+        self.min_distance_from_ego = float(min_distance_from_ego)
         self.actors = []
 
-    def apply(self, enabled):
+    def apply(self, enabled, reference_location=None):
         if enabled:
             if not self.actors:
-                self._spawn_traffic()
+                self._spawn_traffic(reference_location)
         else:
             self.destroy_all()
 
@@ -27,14 +28,20 @@ class TrafficController:
                 pass
         self.actors = []
 
-    def _spawn_traffic(self):
+    def _spawn_traffic(self, reference_location=None):
         self.destroy_all()
         blueprint_library = self.world.get_blueprint_library()
         spawn_points = self.world.get_map().get_spawn_points()
+        if reference_location is not None:
+            spawn_points = [
+                sp for sp in spawn_points
+                if sp.location.distance(reference_location) >= self.min_distance_from_ego
+            ]
         random.shuffle(spawn_points)
 
         traffic_manager = self.client.get_trafficmanager()
         traffic_manager.set_synchronous_mode(False)
+        traffic_manager.set_global_distance_to_leading_vehicle(3.0)
 
         vehicle_bps = blueprint_library.filter("vehicle.*")
         vehicle_count = min(self.vehicle_count, len(spawn_points))
@@ -58,6 +65,11 @@ class TrafficController:
                 continue
             actor = self.world.get_actor(result.actor_id)
             if actor is not None:
+                try:
+                    traffic_manager.auto_lane_change(actor, False)
+                    traffic_manager.vehicle_percentage_speed_difference(actor, 10)
+                except Exception:
+                    pass
                 self.actors.append(actor)
 
         walker_bps = blueprint_library.filter("walker.pedestrian.*")
