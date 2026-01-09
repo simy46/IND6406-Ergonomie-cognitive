@@ -21,6 +21,15 @@ from ui.hud import draw_center_message, render_hud
 from ui.pause import render_pause_screen
 
 
+def cleanup_world_actors(world):
+    for pattern in ("vehicle.*", "walker.pedestrian.*", "controller.ai.walker"):
+        for actor in world.get_actors().filter(pattern):
+            try:
+                actor.destroy()
+            except Exception:
+                pass
+
+
 def main():
     pygame.init()
     screen = pygame.display.set_mode((1280, 720), pygame.RESIZABLE | pygame.SCALED)
@@ -44,10 +53,9 @@ def main():
         traffic_manager.set_synchronous_mode(True)
 
     # =========================
-    # CLEANUP VEHICLES
+    # CLEANUP ACTORS (RESET STATE)
     # =========================
-    for a in world.get_actors().filter("vehicle.*"):
-        a.destroy()
+    cleanup_world_actors(world)
 
     # =========================
     # SPAWN VEHICLE (ONCE)
@@ -168,6 +176,7 @@ def main():
         # =========================
         # CLEAN EXIT
         # =========================
+        cleanup_world_actors(world)
         camera.destroy()
         vehicle.destroy()
         pygame.quit()
