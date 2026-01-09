@@ -3,18 +3,27 @@ import carla
 
 
 class TrafficController:
-    def __init__(self, client, world, vehicle_count, walker_count, min_distance_from_ego):
+    def __init__(
+        self,
+        client,
+        world,
+        vehicle_count,
+        walker_count,
+        min_distance_from_ego,
+        min_distance_from_route,
+    ):
         self.client = client
         self.world = world
         self.vehicle_count = int(vehicle_count)
         self.walker_count = int(walker_count)
         self.min_distance_from_ego = float(min_distance_from_ego)
+        self.min_distance_from_route = float(min_distance_from_route)
         self.actors = []
 
-    def apply(self, enabled, reference_location=None):
+    def apply(self, enabled, reference_location=None, avoid_locations=None):
         if enabled:
             if not self.actors:
-                self._spawn_traffic(reference_location)
+                self._spawn_traffic(reference_location, avoid_locations)
         else:
             self.destroy_all()
 
@@ -28,7 +37,7 @@ class TrafficController:
                 pass
         self.actors = []
 
-    def _spawn_traffic(self, reference_location=None):
+    def _spawn_traffic(self, reference_location=None, avoid_locations=None):
         self.destroy_all()
         blueprint_library = self.world.get_blueprint_library()
         spawn_points = self.world.get_map().get_spawn_points()
@@ -37,6 +46,17 @@ class TrafficController:
                 sp for sp in spawn_points
                 if sp.location.distance(reference_location) >= self.min_distance_from_ego
             ]
+        if avoid_locations:
+            filtered = []
+            for sp in spawn_points:
+                keep = True
+                for loc in avoid_locations:
+                    if sp.location.distance(loc) < self.min_distance_from_route:
+                        keep = False
+                        break
+                if keep:
+                    filtered.append(sp)
+            spawn_points = filtered
         random.shuffle(spawn_points)
 
         traffic_manager = self.client.get_trafficmanager()

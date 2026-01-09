@@ -14,6 +14,7 @@ from core.constants import (
     TRAFFIC_VEHICLES,
     TRAFFIC_PEDESTRIANS,
     TRAFFIC_MIN_DISTANCE_FROM_EGO,
+    TRAFFIC_MIN_DISTANCE_FROM_ROUTE,
 )
 from core.traffic import TrafficController
 from core.telemetry import Telemetry
@@ -48,6 +49,7 @@ class MissionManager:
             TRAFFIC_VEHICLES,
             TRAFFIC_PEDESTRIANS,
             TRAFFIC_MIN_DISTANCE_FROM_EGO,
+            TRAFFIC_MIN_DISTANCE_FROM_ROUTE,
         )
     def reset_vehicle_to_spawn(self, spawn_transform: carla.Transform):
         self.vehicle.set_transform(spawn_transform)
@@ -123,7 +125,12 @@ class MissionManager:
         self.start, self.destination = pick_start_and_destination(self.world)
         self.route = compute_route(self.world, self.start.location, self.destination.location)
         self.reset_vehicle_to_spawn(self.start)
-        self.traffic_controller.apply(traffic_enabled, self.vehicle.get_location())
+        avoid_locations = [wp.transform.location for wp, _ in self.route]
+        self.traffic_controller.apply(
+            traffic_enabled,
+            self.vehicle.get_location(),
+            avoid_locations,
+        )
         self.autonomous_driver = None
         self.takeover_controller = None
         if self.selected_mode == MODE_MANUAL:
