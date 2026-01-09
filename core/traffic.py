@@ -37,32 +37,57 @@ class TrafficController:
         traffic_manager.set_synchronous_mode(False)
 
         vehicle_bps = blueprint_library.filter("vehicle.*")
-        for spawn_point in spawn_points[: self.vehicle_count]:
+        vehicle_count = min(self.vehicle_count, len(spawn_points))
+        batch = []
+        for spawn_point in spawn_points[:vehicle_count]:
             bp = random.choice(vehicle_bps)
             if bp.has_attribute("color"):
                 color = random.choice(bp.get_attribute("color").recommended_values)
                 bp.set_attribute("color", color)
-            try:
-                vehicle = self.world.spawn_actor(bp, spawn_point)
-            except RuntimeError:
+            batch.append(
+                carla.command.SpawnActor(bp, spawn_point).then(
+                    carla.command.SetAutopilot(
+                        carla.command.FutureActor, True, traffic_manager.get_port()
+                    )
+                )
+            )
+        results = self.client.apply_batch_sync(batch, True)
+        for result in results:
+            if result.error:
+                print(f"[TRAFFIC][WARN] Vehicle spawn failed: {result.error}")
                 continue
-            vehicle.set_autopilot(True, traffic_manager.get_port())
-            self.actors.append(vehicle)
+            actor = self.world.get_actor(result.actor_id)
+            if actor is not None:
+                self.actors.append(actor)
 
         walker_bps = blueprint_library.filter("walker.pedestrian.*")
         walker_controller_bp = blueprint_library.find("controller.ai.walker")
-        walker_spawn_points = []
+        walker_transforms = []
         for _ in range(self.walker_count):
             location = self.world.get_random_location_from_navigation()
             if location:
-                walker_spawn_points.append(carla.Transform(location))
-        for spawn_point in walker_spawn_points:
+                walker_transforms.append(carla.Transform(location))
+
+        walker_batch = []
+        for transform in walker_transforms:
             bp = random.choice(walker_bps)
-            try:
-                walker = self.world.spawn_actor(bp, spawn_point)
-            except RuntimeError:
+            walker_batch.append(carla.command.SpawnActor(bp, transform))
+        walker_results = self.client.apply_batch_sync(walker_batch, True)
+        walker_ids = [r.actor_id for r in walker_results if not r.error]
+
+        controller_batch = []
+        for walker_id in walker_ids:
+            controller_batch.append(
+                carla.command.SpawnActor(walker_controller_bp, carla.Transform(), walker_id)
+            )
+        controller_results = self.client.apply_batch_sync(controller_batch, True)
+        controller_ids = [r.actor_id for r in controller_results if not r.error]
+
+        for controller_id, walker_id in zip(controller_ids, walker_ids):
+            controller = self.world.get_actor(controller_id)
+            walker = self.world.get_actor(walker_id)
+            if controller is None or walker is None:
                 continue
-            controller = self.world.spawn_actor(walker_controller_bp, carla.Transform(), attach_to=walker)
             controller.start()
             controller.go_to_location(self.world.get_random_location_from_navigation())
             controller.set_max_speed(1.4)
