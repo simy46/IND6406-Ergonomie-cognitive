@@ -95,7 +95,11 @@ class TrafficController:
                     )
                 )
             )
-        results = self.client.apply_batch_sync(batch, True)
+        try:
+            results = self.client.apply_batch_sync(batch, True)
+        except Exception as e:
+            print(f"[TRAFFIC][ERROR] Vehicle spawn batch failed: {e}")
+            return
         for result in results:
             if result.error:
                 print(f"[TRAFFIC][WARN] Vehicle spawn failed: {result.error}")
@@ -110,6 +114,8 @@ class TrafficController:
                 self.actors.append(actor)
         if self.vehicle_count > 0:
             print(f"[TRAFFIC] Vehicles spawned: {len(self.actors)}/{self.vehicle_count}")
+        if sync_enabled:
+            self.world.tick()
 
         walker_bps = blueprint_library.filter("walker.pedestrian.*")
         walker_controller_bp = blueprint_library.find("controller.ai.walker")
@@ -123,7 +129,11 @@ class TrafficController:
         for transform in walker_transforms:
             bp = random.choice(walker_bps)
             walker_batch.append(carla.command.SpawnActor(bp, transform))
-        walker_results = self.client.apply_batch_sync(walker_batch, True)
+        try:
+            walker_results = self.client.apply_batch_sync(walker_batch, True)
+        except Exception as e:
+            print(f"[TRAFFIC][ERROR] Walker spawn batch failed: {e}")
+            return
         walker_ids = [r.actor_id for r in walker_results if not r.error]
 
         controller_batch = []
@@ -131,7 +141,11 @@ class TrafficController:
             controller_batch.append(
                 carla.command.SpawnActor(walker_controller_bp, carla.Transform(), walker_id)
             )
-        controller_results = self.client.apply_batch_sync(controller_batch, True)
+        try:
+            controller_results = self.client.apply_batch_sync(controller_batch, True)
+        except Exception as e:
+            print(f"[TRAFFIC][ERROR] Walker controller spawn failed: {e}")
+            return
         controller_ids = [r.actor_id for r in controller_results if not r.error]
 
         for controller_id, walker_id in zip(controller_ids, walker_ids):
@@ -146,3 +160,5 @@ class TrafficController:
             self.actors.append(walker)
         if self.walker_count > 0:
             print(f"[TRAFFIC] Walkers spawned: {len(walker_ids)}/{self.walker_count}")
+        if sync_enabled:
+            self.world.tick()
