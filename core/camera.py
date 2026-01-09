@@ -9,8 +9,6 @@ class CameraRGB:
         self.vehicle = vehicle
         self.surface = None
         self.sensor = None
-        self.width = int(width)
-        self.height = int(height)
 
         self.transforms = [
             carla.Transform(carla.Location(x=0.3, z=1.2),
@@ -24,8 +22,8 @@ class CameraRGB:
         self.index = 0
 
         bp = world.get_blueprint_library().find("sensor.camera.rgb")
-        bp.set_attribute("image_size_x", str(self.width))
-        bp.set_attribute("image_size_y", str(self.height))
+        bp.set_attribute("image_size_x", str(width))
+        bp.set_attribute("image_size_y", str(height))
         bp.set_attribute("fov", "90")
 
         self.bp = bp
@@ -48,20 +46,6 @@ class CameraRGB:
         self.index = (self.index + 1) % len(self.transforms)
         self._spawn()
         print(f"[CAMERA] Switched to view {self.index}")
-
-    def set_resolution(self, width, height):
-        width = int(width)
-        height = int(height)
-        if width <= 0 or height <= 0:
-            return
-        if width == self.width and height == self.height:
-            return
-        self.width = width
-        self.height = height
-        self.bp.set_attribute("image_size_x", str(self.width))
-        self.bp.set_attribute("image_size_y", str(self.height))
-        self._spawn()
-        print(f"[CAMERA] Resolution set to {self.width}x{self.height}")
 
     def _on_image(self, image):
         array = np.frombuffer(image.raw_data, dtype=np.uint8)
