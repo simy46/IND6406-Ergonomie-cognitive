@@ -32,6 +32,16 @@ def main():
     client = carla.Client("127.0.0.1", 2000)
     client.set_timeout(5.0)
     world = client.get_world()
+    original_settings = world.get_settings()
+    sync_enabled = True
+    traffic_manager = None
+    if sync_enabled:
+        settings = world.get_settings()
+        settings.synchronous_mode = True
+        settings.fixed_delta_seconds = 1.0 / 60.0
+        world.apply_settings(settings)
+        traffic_manager = client.get_trafficmanager()
+        traffic_manager.set_synchronous_mode(True)
 
     # =========================
     # CLEANUP VEHICLES
@@ -62,12 +72,15 @@ def main():
     # =========================
     # MAIN LOOP
     # =========================
-    while running:
-        now = time.time()
-        clock.tick(60)
-        dt = clock.get_time() / 1000.0
-        if pause_controller.telemetry is not mission_manager.telemetry:
-            pause_controller.set_telemetry(mission_manager.telemetry)
+    try:
+        while running:
+            now = time.time()
+            clock.tick(60)
+            dt = clock.get_time() / 1000.0
+            if pause_controller.telemetry is not mission_manager.telemetry:
+                pause_controller.set_telemetry(mission_manager.telemetry)
+            if sync_enabled and not pause_controller.paused:
+                world.tick()
 
         # -------------------------
         # EVENTS
@@ -139,15 +152,21 @@ def main():
                 color=(0, 220, 255),
             )
 
-        pygame.display.flip()
+            pygame.display.flip()
 
-    # =========================
-    # CLEAN EXIT
-    # =========================
-    camera.destroy()
-    vehicle.destroy()
-    pygame.quit()
-    print("Exited cleanly")
+    finally:
+        if sync_enabled:
+            world.apply_settings(original_settings)
+            if traffic_manager is not None:
+                traffic_manager.set_synchronous_mode(False)
+
+        # =========================
+        # CLEAN EXIT
+        # =========================
+        camera.destroy()
+        vehicle.destroy()
+        pygame.quit()
+        print("Exited cleanly")
 
 
 if __name__ == "__main__":
