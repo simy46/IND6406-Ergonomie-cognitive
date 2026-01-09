@@ -121,7 +121,7 @@ def render_hud(screen, telemetry, active_drive_mode):
         screen.blit(font.render(line, True, TEXT_COLOR), (content_x, content_y))
         content_y += line_gap
 
-    speed_rect = pygame.Rect(x, panel_rect.bottom + 10, 220, 160)
+    speed_rect = pygame.Rect(16, screen.get_height() - 170, 220, 160)
     _draw_speedometer(screen, speed_rect, telemetry.current_speed_kmh)
     if telemetry.selected_mode == "takeover":
         requested = "YES" if telemetry.takeover_requested else "NO"
