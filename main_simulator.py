@@ -41,6 +41,7 @@ def main():
     client = carla.Client("127.0.0.1", 2000)
     client.set_timeout(5.0)
     world = client.get_world()
+    world = client.reload_world()
     original_settings = world.get_settings()
     sync_enabled = True
     traffic_manager = None
