@@ -44,7 +44,19 @@ class Telemetry:
         self.lane_metrics = LaneMetrics(self.world.get_map())
         self.lane_invasion_sensor = None
         self.collision_sensor = None
+        self.paused = False
+        self.pause_started = None
+        self.paused_total_seconds = 0.0
         self._setup_sensors()
+
+    def _get_elapsed_seconds(self, now=None):
+        if now is None:
+            now = time.time()
+        paused_total = self.paused_total_seconds
+        if self.paused and self.pause_started is not None:
+            paused_total += now - self.pause_started
+        elapsed = now - self.mission_start_time - paused_total
+        return max(0.0, elapsed)
 
     def _setup_sensors(self):
         blueprint_library = self.world.get_blueprint_library()
@@ -82,7 +94,7 @@ class Telemetry:
             self.collision_max_intensity = intensity
 
     def update(self, active_drive_mode, dt):
-        if dt <= 0:
+        if self.paused or dt <= 0:
             return
         location = self.vehicle.get_location()
         if self.prev_location is not None:
@@ -111,7 +123,23 @@ class Telemetry:
                 self.takeover_reaction_time_seconds = reaction
 
     def get_mission_elapsed_seconds(self):
-        return time.time() - self.mission_start_time
+        return self._get_elapsed_seconds()
+
+    def pause(self):
+        if self.paused:
+            return
+        self.paused = True
+        self.pause_started = time.time()
+
+    def resume(self):
+        if not self.paused:
+            return
+        now = time.time()
+        if self.pause_started is not None:
+            self.paused_total_seconds += now - self.pause_started
+        self.paused = False
+        self.pause_started = None
+        self.prev_location = self.vehicle.get_location()
 
     def get_lane_offset_mean(self):
         return self.lane_metrics.get_mean_offset()
@@ -130,7 +158,7 @@ class Telemetry:
         self.mode_switch_count += 1
 
     def finalize(self):
-        mission_duration_seconds = time.time() - self.mission_start_time
+        mission_duration_seconds = self._get_elapsed_seconds()
         average_speed_kmh = 0.0
         if self.speed_time_total > 0:
             average_speed_kmh = self.speed_time_sum / self.speed_time_total

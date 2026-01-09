@@ -15,8 +15,10 @@ from core.mission import pick_start_and_destination
 from core.mission_manager import MissionManager
 from core.route_visualizer import draw_route, draw_destination
 from core.camera import CameraRGB
+from core.pause import PauseController
 from input.steering_wheel import SteeringWheel
 from ui.hud import draw_hud_message, render_hud
+from ui.pause import render_pause_screen
 
 
 def main():
@@ -51,6 +53,7 @@ def main():
     camera = CameraRGB(world, vehicle)
     wheel = SteeringWheel(debug=True)
     mission_manager = MissionManager(world, vehicle, wheel)
+    pause_controller = PauseController(vehicle)
 
     clock = pygame.time.Clock()
     running = True
@@ -62,6 +65,8 @@ def main():
         now = time.time()
         clock.tick(60)
         dt = clock.get_time() / 1000.0
+        if pause_controller.telemetry is not mission_manager.telemetry:
+            pause_controller.set_telemetry(mission_manager.telemetry)
 
         # -------------------------
         # EVENTS
@@ -71,6 +76,12 @@ def main():
                 running = False
 
             elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_p:
+                    if mission_manager.mission_active:
+                        pause_controller.toggle()
+                    continue
+                if pause_controller.paused:
+                    continue
                 if event.key == pygame.K_TAB:
                     camera.toggle()
 
@@ -86,6 +97,11 @@ def main():
         if mission_manager.in_menu:
             if not mission_manager.run_menu(screen, clock):
                 break
+
+        if pause_controller.paused:
+            render_pause_screen(screen)
+            pygame.display.flip()
+            continue
 
         # =========================
         # RUN MODE
