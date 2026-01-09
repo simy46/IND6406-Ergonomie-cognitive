@@ -117,7 +117,7 @@ def render_hud(screen, telemetry, active_drive_mode):
 
     col_gap = 32
     col_width = 160
-    row_gap = 44
+    row_gap = 46
     col1_x = content_x
     col2_x = content_x + col_width + col_gap
     row1_y = content_y
@@ -128,7 +128,7 @@ def render_hud(screen, telemetry, active_drive_mode):
         key = font_small.render(label, True, MUTED_TEXT)
         screen.blit(key, (x_pos, y_pos))
         val = font.render(value, True, TEXT_COLOR)
-        screen.blit(val, (x_pos, y_pos + 16))
+        screen.blit(val, (x_pos, y_pos + 18))
 
     draw_cell("Scenario", telemetry.selected_mode, col1_x, row1_y)
     draw_cell("Drive mode", active_drive_mode, col2_x, row1_y)
@@ -138,7 +138,12 @@ def render_hud(screen, telemetry, active_drive_mode):
         col1_x,
         row2_y,
     )
-    draw_cell("Lane invasion", f"{telemetry.lane_invasion_count}", col2_x, row2_y)
+    draw_cell(
+        "Lane invasion",
+        f"{telemetry.lane_invasion_count}  Coll {telemetry.collision_count}",
+        col2_x,
+        row2_y,
+    )
     draw_cell(
         "Time split",
         f"M {telemetry.manual_time_seconds:.1f}s  A {telemetry.auto_time_seconds:.1f}s",
