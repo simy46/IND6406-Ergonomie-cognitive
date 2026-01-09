@@ -2,7 +2,13 @@ import random
 import carla
 
 from agents.navigation.global_route_planner import GlobalRoutePlanner
-from core.constants import ROUTE_MIN_METERS, ROUTE_MAX_METERS, ROUTE_ATTEMPTS
+from core.constants import (
+    ROUTE_MIN_METERS,
+    ROUTE_MAX_METERS,
+    ROUTE_ATTEMPTS,
+    ROUTE_MIN_SECONDS,
+    ROUTE_SPEED_KMH,
+)
 
 
 def pick_start_and_destination(world):
@@ -49,6 +55,7 @@ def pick_long_route(world):
     spawn_points = world.get_map().get_spawn_points()
     best = None
     best_length = 0.0
+    min_speed_ms = max(0.1, ROUTE_SPEED_KMH / 3.6)
     for _ in range(ROUTE_ATTEMPTS):
         start = random.choice(spawn_points)
         dest = random.choice(spawn_points)
@@ -56,7 +63,11 @@ def pick_long_route(world):
             dest = random.choice(spawn_points)
         route = compute_route(world, start.location, dest.location)
         length = compute_route_length(route)
-        if ROUTE_MIN_METERS <= length <= ROUTE_MAX_METERS:
+        estimated_seconds = length / min_speed_ms
+        if (
+            ROUTE_MIN_METERS <= length <= ROUTE_MAX_METERS
+            and estimated_seconds >= ROUTE_MIN_SECONDS
+        ):
             return start, dest, route
         if length > best_length:
             best = (start, dest, route)
