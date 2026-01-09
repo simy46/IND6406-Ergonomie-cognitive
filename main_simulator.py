@@ -81,7 +81,7 @@ def main():
                     if mission_manager.mission_active:
                         pause_controller.toggle()
                     continue
-                if event.key in (pygame.K_LSHIFT, pygame.K_RSHIFT):
+                if event.key in (pygame.K_LCTRL, pygame.K_RCTRL):
                     hud_visible = not hud_visible
                     continue
                 if pause_controller.paused:
@@ -130,8 +130,7 @@ def main():
         # =========================
         screen.fill((0, 0, 0))
         camera.render(screen)
-        if hud_visible:
-            render_hud(screen, mission_manager.telemetry, mission_manager.active_drive_mode)
+        render_hud(screen, mission_manager.telemetry, mission_manager.active_drive_mode, hud_visible=hud_visible)
 
         if mission_manager.show_restart_prompt:
             draw_center_message(
