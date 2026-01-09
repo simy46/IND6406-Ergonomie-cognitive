@@ -5,7 +5,7 @@ import pygame
 PANEL_BG = (15, 15, 18, 215)
 PANEL_BORDER = (0, 180, 220)
 TEXT_COLOR = (235, 235, 235)
-MUTED_TEXT = (170, 170, 170)
+MUTED_TEXT = (120, 200, 215)
 SPEED_COLOR = (0, 220, 255)
 
 
@@ -89,6 +89,7 @@ def render_hud(screen, telemetry, active_drive_mode):
         return
     font = pygame.font.SysFont(None, 24)
     font_small = pygame.font.SysFont(None, 20)
+    font_name = pygame.font.SysFont(None, 30)
     x = 20
     y = 20
     line_gap = 22
@@ -104,15 +105,20 @@ def render_hud(screen, telemetry, active_drive_mode):
     minutes = int(elapsed // 60)
     seconds = int(elapsed % 60)
     timer_text = f"{minutes:02d}:{seconds:02d}"
-    name_text = font_small.render(telemetry.student_name, True, MUTED_TEXT)
+    name_text = font_name.render(telemetry.student_name, True, TEXT_COLOR)
     screen.blit(name_text, (content_x, content_y))
-    content_y += line_gap
+    content_y += line_gap + 6
 
+    scenario_key = font_small.render("Scenario", True, MUTED_TEXT)
+    drive_key = font_small.render("Drive mode", True, MUTED_TEXT)
+    screen.blit(scenario_key, (content_x, content_y))
+    screen.blit(drive_key, (content_x + 180, content_y))
+    content_y += line_gap - 6
     scenario_text = font.render(telemetry.selected_mode, True, TEXT_COLOR)
     drive_text = font.render(active_drive_mode, True, TEXT_COLOR)
     screen.blit(scenario_text, (content_x, content_y))
-    screen.blit(drive_text, (content_x + 160, content_y))
-    content_y += line_gap + 6
+    screen.blit(drive_text, (content_x + 180, content_y))
+    content_y += line_gap + 8
 
     route_label = font_small.render("Route tracking", True, MUTED_TEXT)
     screen.blit(route_label, (content_x, content_y))
