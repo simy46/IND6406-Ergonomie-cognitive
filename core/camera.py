@@ -11,8 +11,8 @@ class CameraRGB:
         self.sensor = None
 
         self.transforms = [
-            carla.Transform(carla.Location(x=0.3, z=1.2),
-                            carla.Rotation(pitch=0.0, yaw=0.0, roll=0.0)),
+            carla.Transform(carla.Location(x=-0.4, z=1.05),
+                            carla.Rotation(pitch=-5.0, yaw=0.0, roll=0.0)),
             carla.Transform(carla.Location(x=1.3, z=1.5)),
             carla.Transform(carla.Location(x=-6.0, z=2.5)),
             carla.Transform(carla.Location(z=15.0),
