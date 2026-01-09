@@ -4,7 +4,7 @@ from core.constants import MODE_MANUAL, MODE_AUTOMATIC, MODE_TAKEOVER
 
 def mission_popup(screen, clock):
     WIDTH, HEIGHT = screen.get_size()
-    POP_W, POP_H = 600, 420
+    POP_W, POP_H = 600, 470
     POP_X = (WIDTH - POP_W) // 2
     POP_Y = (HEIGHT - POP_H) // 2
 
@@ -14,6 +14,7 @@ def mission_popup(screen, clock):
 
     name = ""
     selected_mode = None
+    traffic_enabled = False
 
     modes = [
         (MODE_MANUAL, "Conduite manuelle"),
@@ -27,14 +28,14 @@ def mission_popup(screen, clock):
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return None, None
+                return None, None, None
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_BACKSPACE:
                     name = name[:-1]
                 elif event.key == pygame.K_RETURN:
                     if name.strip() and selected_mode:
-                        return name.strip(), selected_mode
+                        return name.strip(), selected_mode, traffic_enabled
                 elif event.unicode.isprintable() and len(name) < 20:
                     name += event.unicode
 
@@ -46,6 +47,14 @@ def mission_popup(screen, clock):
                     bw, bh = 440, 45
                     if bx <= mx <= bx + bw and by <= my <= by + bh:
                         selected_mode = mode_key
+                checkbox_x = POP_X + 80
+                checkbox_y = POP_Y + 220 + len(modes) * 55 + 10
+                checkbox_size = 24
+                if (
+                    checkbox_x <= mx <= checkbox_x + checkbox_size
+                    and checkbox_y <= my <= checkbox_y + checkbox_size
+                ):
+                    traffic_enabled = not traffic_enabled
 
         # =========================
         # DRAW OVERLAY
@@ -118,6 +127,28 @@ def mission_popup(screen, clock):
                 font.render(label, True, (255, 255, 255)),
                 (POP_X + 100, y + 10)
             )
+
+        checkbox_x = POP_X + 80
+        checkbox_y = POP_Y + 220 + len(modes) * 55 + 10
+        checkbox_size = 24
+        pygame.draw.rect(
+            screen,
+            (255, 255, 255),
+            (checkbox_x, checkbox_y, checkbox_size, checkbox_size),
+            2,
+            border_radius=4
+        )
+        if traffic_enabled:
+            pygame.draw.rect(
+                screen,
+                (0, 180, 220),
+                (checkbox_x + 4, checkbox_y + 4, checkbox_size - 8, checkbox_size - 8),
+                border_radius=3
+            )
+        screen.blit(
+            font.render("Activer trafic léger", True, (220, 220, 220)),
+            (checkbox_x + 36, checkbox_y - 2)
+        )
 
         # =========================
         # FOOTER

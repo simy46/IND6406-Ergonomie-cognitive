@@ -52,7 +52,7 @@ def main():
     # =========================
     camera = CameraRGB(world, vehicle)
     wheel = SteeringWheel(debug=True)
-    mission_manager = MissionManager(world, vehicle, wheel)
+    mission_manager = MissionManager(client, world, vehicle, wheel)
     pause_controller = PauseController(vehicle)
 
     clock = pygame.time.Clock()

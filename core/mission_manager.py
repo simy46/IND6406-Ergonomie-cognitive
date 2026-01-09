@@ -11,7 +11,10 @@ from core.constants import (
     MODE_TAKEOVER,
     DRIVE_MANUAL,
     DRIVE_AUTOMATIC,
+    TRAFFIC_VEHICLES,
+    TRAFFIC_PEDESTRIANS,
 )
+from core.traffic import TrafficController
 from core.telemetry import Telemetry
 from core.logger import append_row
 from scenarios.scenario_autonomous import AutonomousDriver
@@ -19,8 +22,9 @@ from scenarios.scenario_manual import run_manual_mode
 from scenarios.scenario_takeover import TakeoverController
 from ui.mission_menu import mission_popup
 class MissionManager:
-    def __init__(self, world, vehicle, wheel):
+    def __init__(self, client, world, vehicle, wheel):
         self.world = world
+        self.client = client
         self.vehicle = vehicle
         self.wheel = wheel
         self.context = {"vehicle": vehicle, "wheel": wheel}
@@ -37,6 +41,12 @@ class MissionManager:
         self.route = None
         self.last_debug_draw = 0.0
         self.telemetry = None
+        self.traffic_controller = TrafficController(
+            client,
+            world,
+            TRAFFIC_VEHICLES,
+            TRAFFIC_PEDESTRIANS,
+        )
     def reset_vehicle_to_spawn(self, spawn_transform: carla.Transform):
         self.vehicle.set_transform(spawn_transform)
         self.vehicle.set_target_velocity(carla.Vector3D(0.0, 0.0, 0.0))
@@ -87,6 +97,7 @@ class MissionManager:
         self.selected_mode = None
         self.active_drive_mode = None
         self.last_debug_draw = 0.0
+        self.traffic_controller.destroy_all()
         if self.telemetry is not None:
             self.telemetry.cleanup()
             self.telemetry = None
@@ -104,9 +115,10 @@ class MissionManager:
     def run_menu(self, screen, clock):
         if not self.in_menu:
             return True
-        self.student_name, self.selected_mode = mission_popup(screen, clock)
+        self.student_name, self.selected_mode, traffic_enabled = mission_popup(screen, clock)
         if not self.student_name:
             return False
+        self.traffic_controller.apply(traffic_enabled)
         self.start, self.destination = pick_start_and_destination(self.world)
         self.route = compute_route(self.world, self.start.location, self.destination.location)
         self.reset_vehicle_to_spawn(self.start)
