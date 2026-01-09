@@ -170,4 +170,5 @@ class MissionManager:
                 metrics = self.telemetry.finalize()
                 append_row(metrics)
                 self.telemetry.cleanup()
+                self.telemetry.pause()
             print(f"[MISSION] Completed by {self.student_name}")
