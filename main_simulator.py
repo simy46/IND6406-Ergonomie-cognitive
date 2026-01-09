@@ -115,7 +115,7 @@ def main():
         if mission_manager.show_restart_prompt:
             draw_hud_message(
                 screen,
-                "Mission terminée – Appuyez sur [ESPACE] (ESC = toggle MANUAL/AUTO)",
+                "Mission terminée: Appuyez sur [ESPACE]",
                 position=(80, 30),
                 color=(0, 220, 255),
             )
