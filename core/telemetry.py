@@ -4,7 +4,7 @@ from datetime import datetime
 
 import carla
 
-from core.lane_metrics import LaneMetrics
+from core.route_metrics import RouteMetrics
 
 
 class Telemetry:
@@ -41,7 +41,7 @@ class Telemetry:
         self.collision_count = 0
         self.collision_max_intensity = 0.0
         self.lane_invasion_count = 0
-        self.lane_metrics = LaneMetrics(self.world.get_map())
+        self.route_metrics = RouteMetrics(self.route)
         self.lane_invasion_sensor = None
         self.collision_sensor = None
         self.paused = False
@@ -114,7 +114,7 @@ class Telemetry:
             self.manual_time_seconds += dt
         elif active_drive_mode == "auto":
             self.auto_time_seconds += dt
-        self.lane_metrics.update(location, dt)
+        self.route_metrics.update(location, dt)
         if self.takeover_controller is not None:
             if self.takeover_controller.takeover_requested:
                 self.takeover_requested = True
@@ -142,10 +142,10 @@ class Telemetry:
         self.prev_location = self.vehicle.get_location()
 
     def get_lane_offset_mean(self):
-        return self.lane_metrics.get_mean_offset()
+        return self.route_metrics.get_mean_offset()
 
     def get_percent_in_lane(self):
-        return self.lane_metrics.get_percent_in_lane()
+        return self.route_metrics.get_percent_in_route()
 
     def get_takeover_reaction_time(self):
         if self.takeover_reaction_time_seconds is not None:
@@ -162,8 +162,8 @@ class Telemetry:
         average_speed_kmh = 0.0
         if self.speed_time_total > 0:
             average_speed_kmh = self.speed_time_sum / self.speed_time_total
-        lane_center_offset_mean_meters = self.lane_metrics.get_mean_offset()
-        percent_time_in_lane = self.lane_metrics.get_percent_in_lane()
+        lane_center_offset_mean_meters = self.route_metrics.get_mean_offset()
+        percent_time_in_lane = self.route_metrics.get_percent_in_route()
         takeover_requested_value = 1 if self.takeover_requested else 0
         takeover_reaction_value = "None"
         if takeover_requested_value == 1:
