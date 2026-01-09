@@ -2,6 +2,7 @@ import random
 import carla
 
 from agents.navigation.global_route_planner import GlobalRoutePlanner
+from core.constants import ROUTE_MIN_METERS, ROUTE_MAX_METERS, ROUTE_ATTEMPTS
 
 
 def pick_start_and_destination(world):
@@ -29,6 +30,42 @@ def compute_route(world, start_location, destination_location, resolution=2.0):
     route = grp.trace_route(start_location, destination_location)
 
     return route
+
+
+def compute_route_length(route):
+    if not route:
+        return 0.0
+    total = 0.0
+    prev = None
+    for wp, _ in route:
+        loc = wp.transform.location
+        if prev is not None:
+            total += prev.distance(loc)
+        prev = loc
+    return total
+
+
+def pick_long_route(world):
+    spawn_points = world.get_map().get_spawn_points()
+    best = None
+    best_length = 0.0
+    for _ in range(ROUTE_ATTEMPTS):
+        start = random.choice(spawn_points)
+        dest = random.choice(spawn_points)
+        while start.location.distance(dest.location) < 50:
+            dest = random.choice(spawn_points)
+        route = compute_route(world, start.location, dest.location)
+        length = compute_route_length(route)
+        if ROUTE_MIN_METERS <= length <= ROUTE_MAX_METERS:
+            return start, dest, route
+        if length > best_length:
+            best = (start, dest, route)
+            best_length = length
+    if best is not None:
+        return best
+    start, dest = pick_start_and_destination(world)
+    route = compute_route(world, start.location, dest.location)
+    return start, dest, route
 
 def reached_destination(vehicle, destination, threshold=5.0):
     return vehicle.get_location().distance(destination.location) < threshold

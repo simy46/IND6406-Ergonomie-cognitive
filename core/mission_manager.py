@@ -1,6 +1,6 @@
 import carla
 from core.mission import (
-    compute_route,
+    pick_long_route,
     pick_start_and_destination,
     reached_destination,
     toggle_manual_auto,
@@ -123,8 +123,7 @@ class MissionManager:
         self.student_name, self.selected_mode, traffic_enabled = mission_popup(screen, clock)
         if not self.student_name:
             return False
-        self.start, self.destination = pick_start_and_destination(self.world)
-        self.route = compute_route(self.world, self.start.location, self.destination.location)
+        self.start, self.destination, self.route = pick_long_route(self.world)
         self.reset_vehicle_to_spawn(self.start)
         avoid_locations = [wp.transform.location for wp, _ in self.route]
         avoid_road_ids = None
