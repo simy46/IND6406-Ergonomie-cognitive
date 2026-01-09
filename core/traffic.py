@@ -76,7 +76,8 @@ class TrafficController:
         random.shuffle(spawn_points)
 
         traffic_manager = self.client.get_trafficmanager()
-        traffic_manager.set_synchronous_mode(False)
+        sync_enabled = self.world.get_settings().synchronous_mode
+        traffic_manager.set_synchronous_mode(sync_enabled)
         traffic_manager.set_global_distance_to_leading_vehicle(3.0)
 
         vehicle_bps = blueprint_library.filter("vehicle.*")
@@ -107,6 +108,8 @@ class TrafficController:
                 except Exception:
                     pass
                 self.actors.append(actor)
+        if self.vehicle_count > 0:
+            print(f"[TRAFFIC] Vehicles spawned: {len(self.actors)}/{self.vehicle_count}")
 
         walker_bps = blueprint_library.filter("walker.pedestrian.*")
         walker_controller_bp = blueprint_library.find("controller.ai.walker")
@@ -141,3 +144,5 @@ class TrafficController:
             controller.set_max_speed(1.4)
             self.actors.append(controller)
             self.actors.append(walker)
+        if self.walker_count > 0:
+            print(f"[TRAFFIC] Walkers spawned: {len(walker_ids)}/{self.walker_count}")
