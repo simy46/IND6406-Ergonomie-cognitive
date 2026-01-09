@@ -1,0 +1,174 @@
+import carla
+from core.mission import (
+    compute_route,
+    pick_start_and_destination,
+    reached_destination,
+    toggle_manual_auto,
+)
+from core.telemetry import Telemetry
+from core.logger import append_row
+from scenarios.scenario_autonomous import AutonomousDriver
+from scenarios.scenario_manual import run_manual_mode
+from scenarios.scenario_takeover import TakeoverController
+from ui.mission_menu import mission_popup
+class MissionManager:
+    def __init__(self, world, vehicle, wheel):
+        self.world = world
+        self.vehicle = vehicle
+        self.wheel = wheel
+        self.context = {"vehicle": vehicle, "wheel": wheel}
+        self.in_menu = True
+        self.mission_active = False
+        self.show_restart_prompt = False
+        self.student_name = None
+        self.selected_mode = None
+        self.active_drive_mode = None
+        self.autonomous_driver = None
+        self.takeover_controller = None
+        self.start = None
+        self.destination = None
+        self.route = None
+        self.last_debug_draw = 0.0
+        self.telemetry = None
+    def reset_vehicle_to_spawn(self, spawn_transform: carla.Transform):
+        self.vehicle.set_transform(spawn_transform)
+        self.vehicle.set_target_velocity(carla.Vector3D(0.0, 0.0, 0.0))
+        self.vehicle.set_target_angular_velocity(carla.Vector3D(0.0, 0.0, 0.0))
+        self.vehicle.apply_control(
+            carla.VehicleControl(
+                throttle=0.0,
+                brake=0.0,
+                steer=0.0,
+                hand_brake=False,
+                reverse=False,
+            )
+        )
+    def ensure_autonomous_driver(self):
+        if self.autonomous_driver is None:
+            self.autonomous_driver = AutonomousDriver(self.vehicle, self.route)
+
+    def handle_escape(self):
+        self.active_drive_mode = toggle_manual_auto(
+            self.active_drive_mode,
+            self.ensure_autonomous_driver,
+            self.takeover_controller,
+        )
+        if self.telemetry is not None:
+            self.telemetry.record_mode_switch()
+    def mission_is_done(self):
+        if self.active_drive_mode == "auto" and self.autonomous_driver is not None:
+            return self.autonomous_driver.is_done()
+        return reached_destination(self.vehicle, self.destination)
+
+    def freeze_vehicle_end(self):
+        self.vehicle.apply_control(
+            carla.VehicleControl(
+                throttle=0.0,
+                brake=1.0,
+                steer=0.0,
+                hand_brake=True,
+                reverse=False,
+            )
+        )
+
+    def reset_state_to_menu(self):
+        self.in_menu = True
+        self.mission_active = False
+        self.show_restart_prompt = False
+        self.autonomous_driver = None
+        self.takeover_controller = None
+        self.selected_mode = None
+        self.active_drive_mode = None
+        self.last_debug_draw = 0.0
+        if self.telemetry is not None:
+            self.telemetry.cleanup()
+            self.telemetry = None
+        self.vehicle.apply_control(
+            carla.VehicleControl(
+                throttle=0.0,
+                brake=0.0,
+                steer=0.0,
+                hand_brake=False,
+                reverse=False,
+            )
+        )
+        print("[MISSION] Returning to menu")
+
+    def run_menu(self, screen, clock):
+        if not self.in_menu:
+            return True
+        self.student_name, self.selected_mode = mission_popup(screen, clock)
+        if not self.student_name:
+            return False
+        self.start, self.destination = pick_start_and_destination(self.world)
+        self.route = compute_route(self.world, self.start.location, self.destination.location)
+        self.reset_vehicle_to_spawn(self.start)
+        self.autonomous_driver = None
+        self.takeover_controller = None
+        if self.selected_mode == "manual":
+            self.active_drive_mode = "manual"
+        elif self.selected_mode == "auto":
+            self.ensure_autonomous_driver()
+            self.active_drive_mode = "auto"
+        elif self.selected_mode == "takeover":
+            self.ensure_autonomous_driver()
+            self.takeover_controller = TakeoverController(self.vehicle, self.autonomous_driver, self.wheel)
+            self.active_drive_mode = "auto"  # commence en auto
+        self.telemetry = Telemetry(
+            self.world,
+            self.vehicle,
+            self.student_name,
+            self.selected_mode,
+            self.route,
+            self.destination,
+            self.takeover_controller,
+        )
+        self.mission_active = True
+        self.in_menu = False
+        self.show_restart_prompt = False
+        self.last_debug_draw = 0.0
+        print(f"[MISSION] Student={self.student_name} | selected_mode={self.selected_mode}")
+        return True
+
+    def run_mission_mode(self):
+        if not self.mission_active:
+            return
+        if self.selected_mode == "takeover" and self.takeover_controller is not None:
+            if self.takeover_controller.should_request_manual():
+                if self.active_drive_mode != "manual":
+                    self.active_drive_mode = "manual"
+                    print("[TAKEOVER] Switching to MANUAL (requested)")
+            if self.active_drive_mode == "auto":
+                self.takeover_controller.update_auto_only()
+            else:
+                if self.takeover_controller.detect_human_input():
+                    self.takeover_controller.mark_manual_override(reason="human_input")
+                run_manual_mode(self.context)
+        else:
+            if self.active_drive_mode == "manual":
+                run_manual_mode(self.context)
+            elif self.active_drive_mode == "auto":
+                self.ensure_autonomous_driver()
+                self.autonomous_driver.run_step()
+
+    def update_telemetry(self, dt):
+        if self.mission_active and self.telemetry is not None:
+            self.telemetry.update(self.active_drive_mode, dt)
+
+    def should_draw_debug(self, now):
+        if self.mission_active and (now - self.last_debug_draw) > 1.0:
+            self.last_debug_draw = now
+            return True
+        return False
+
+    def check_end(self):
+        if self.mission_active and self.mission_is_done():
+            self.mission_active = False
+            self.show_restart_prompt = True
+            self.freeze_vehicle_end()
+            if self.telemetry is not None:
+                metrics = self.telemetry.finalize()
+                append_row(metrics)
+                self.telemetry.cleanup()
+                self.telemetry = None
+            print(f"[MISSION] Completed by {self.student_name}")

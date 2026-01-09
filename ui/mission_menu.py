@@ -1,0 +1,133 @@
+import pygame
+
+
+def mission_popup(screen, clock):
+    WIDTH, HEIGHT = screen.get_size()
+    POP_W, POP_H = 600, 420
+    POP_X = (WIDTH - POP_W) // 2
+    POP_Y = (HEIGHT - POP_H) // 2
+
+    font_title = pygame.font.SysFont(None, 42)
+    font = pygame.font.SysFont(None, 32)
+    font_small = pygame.font.SysFont(None, 22)
+
+    name = ""
+    selected_mode = None
+
+    modes = [
+        ("manual", "Conduite manuelle"),
+        ("auto", "Conduite automatique"),
+        ("takeover", "Auto + reprise humaine"),
+    ]
+
+    running = True
+    while running:
+        clock.tick(60)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return None, None
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_BACKSPACE:
+                    name = name[:-1]
+                elif event.key == pygame.K_RETURN:
+                    if name.strip() and selected_mode:
+                        return name.strip(), selected_mode
+                elif event.unicode.isprintable() and len(name) < 20:
+                    name += event.unicode
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mx, my = event.pos
+                for i, (mode_key, _) in enumerate(modes):
+                    bx = POP_X + 80
+                    by = POP_Y + 220 + i * 55
+                    bw, bh = 440, 45
+                    if bx <= mx <= bx + bw and by <= my <= by + bh:
+                        selected_mode = mode_key
+
+        # =========================
+        # DRAW OVERLAY
+        # =========================
+        overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 120))
+        screen.blit(overlay, (0, 0))
+
+        # =========================
+        # POPUP BACKGROUND
+        # =========================
+        pygame.draw.rect(
+            screen,
+            (25, 25, 25),
+            (POP_X, POP_Y, POP_W, POP_H),
+            border_radius=12
+        )
+        pygame.draw.rect(
+            screen,
+            (0, 180, 220),
+            (POP_X, POP_Y, POP_W, POP_H),
+            2,
+            border_radius=12
+        )
+
+        # =========================
+        # TITLE
+        # =========================
+        screen.blit(
+            font_title.render("Nouvelle mission !", True, (0, 220, 255)),
+            (POP_X + 180, POP_Y + 25)
+        )
+
+        # =========================
+        # NAME INPUT
+        # =========================
+        screen.blit(
+            font.render("Nom de l'élève (pour fichier_nom.csv) :", True, (220, 220, 220)),
+            (POP_X + 80, POP_Y + 90)
+        )
+
+        pygame.draw.rect(
+            screen,
+            (255, 255, 255),
+            (POP_X + 80, POP_Y + 125, 440, 40),
+            2,
+            border_radius=6
+        )
+
+        screen.blit(
+            font.render(name, True, (255, 255, 255)),
+            (POP_X + 90, POP_Y + 132)
+        )
+
+        # =========================
+        # MODE BUTTONS
+        # =========================
+        for i, (mode_key, label) in enumerate(modes):
+            y = POP_Y + 220 + i * 55
+            is_selected = (selected_mode == mode_key)
+
+            pygame.draw.rect(
+                screen,
+                (0, 160, 200) if is_selected else (50, 50, 50),
+                (POP_X + 80, y, 440, 45),
+                border_radius=8
+            )
+
+            screen.blit(
+                font.render(label, True, (255, 255, 255)),
+                (POP_X + 100, y + 10)
+            )
+
+        # =========================
+        # FOOTER
+        # =========================
+        hint = "Cliquez sur [ENTRÉE] pour démarrer la mission"
+        if not (name.strip() and selected_mode):
+            hint = "Entrez un nom et choisissez un mode"
+
+        screen.blit(
+            font_small.render(hint, True, (180, 180, 180)),
+            (POP_X + 170, POP_Y + POP_H - 35)
+        )
+
+        pygame.display.flip()
