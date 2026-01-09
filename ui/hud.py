@@ -104,24 +104,51 @@ def render_hud(screen, telemetry, active_drive_mode):
     minutes = int(elapsed // 60)
     seconds = int(elapsed % 60)
     timer_text = f"{minutes:02d}:{seconds:02d}"
-    rows = [
-        ("Student", telemetry.student_name),
-        ("Mode", telemetry.selected_mode),
-        ("Drive mode", active_drive_mode),
-        ("Timer", timer_text),
-        ("Distance", f"{telemetry.distance_traveled_meters:.1f} m"),
-        ("On route", f"{telemetry.get_percent_in_lane():.1f}%"),
-        ("Route offset", f"{telemetry.get_lane_offset_mean():.2f} m"),
-        ("Lane invasions", f"{telemetry.lane_invasion_count}"),
-        ("Collisions", f"{telemetry.collision_count}"),
-        ("Manual time", f"{telemetry.manual_time_seconds:.1f}s"),
-        ("Auto time", f"{telemetry.auto_time_seconds:.1f}s"),
-    ]
-    value_x = content_x + 150
-    for label, value in rows:
-        screen.blit(font.render(f"{label}:", True, MUTED_TEXT), (content_x, content_y))
-        screen.blit(font.render(str(value), True, TEXT_COLOR), (value_x, content_y))
-        content_y += line_gap
+    name_text = font_small.render(telemetry.student_name, True, MUTED_TEXT)
+    screen.blit(name_text, (content_x, content_y))
+    content_y += line_gap
+
+    scenario_text = font.render(f"Scenario: {telemetry.selected_mode}", True, TEXT_COLOR)
+    screen.blit(scenario_text, (content_x, content_y))
+    content_y += line_gap
+
+    drive_text = font.render(f"Drive: {active_drive_mode}", True, TEXT_COLOR)
+    screen.blit(drive_text, (content_x, content_y))
+    content_y += line_gap + 4
+
+    timer_label = font_small.render("Mission time", True, MUTED_TEXT)
+    screen.blit(timer_label, (content_x, content_y))
+    content_y += line_gap - 6
+    timer_big = pygame.font.SysFont(None, 36).render(timer_text, True, SPEED_COLOR)
+    screen.blit(timer_big, (content_x, content_y))
+    content_y += line_gap + 6
+
+    distance_text = font.render(f"{telemetry.distance_traveled_meters:.1f} m traveled", True, TEXT_COLOR)
+    screen.blit(distance_text, (content_x, content_y))
+    content_y += line_gap
+
+    route_text = font.render(
+        f"On route {telemetry.get_percent_in_lane():.1f}%  |  avg offset {telemetry.get_lane_offset_mean():.2f} m",
+        True,
+        TEXT_COLOR,
+    )
+    screen.blit(route_text, (content_x, content_y))
+    content_y += line_gap
+
+    incidents_text = font.render(
+        f"Lane invasions {telemetry.lane_invasion_count}  |  Collisions {telemetry.collision_count}",
+        True,
+        TEXT_COLOR,
+    )
+    screen.blit(incidents_text, (content_x, content_y))
+    content_y += line_gap
+
+    time_split_text = font.render(
+        f"Manual {telemetry.manual_time_seconds:.1f}s  |  Auto {telemetry.auto_time_seconds:.1f}s",
+        True,
+        TEXT_COLOR,
+    )
+    screen.blit(time_split_text, (content_x, content_y))
 
     speed_rect = pygame.Rect(16, screen.get_height() - 200, 260, 190)
     _draw_speedometer(screen, speed_rect, telemetry.current_speed_kmh)
