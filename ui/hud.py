@@ -94,8 +94,8 @@ def render_hud(screen, telemetry, active_drive_mode):
     line_gap = 24
 
     extra_lines = 2 if telemetry.selected_mode == "takeover" else 0
-    panel_height = 260 + (extra_lines * line_gap)
-    panel_rect = pygame.Rect(x, y, 380, panel_height)
+    panel_height = 230 + (extra_lines * line_gap)
+    panel_rect = pygame.Rect(x, y, 360, panel_height)
     _draw_panel(screen, panel_rect)
     content_x = panel_rect.x + 16
     content_y = panel_rect.y + 14
@@ -108,30 +108,11 @@ def render_hud(screen, telemetry, active_drive_mode):
     screen.blit(name_text, (content_x, content_y))
     content_y += line_gap
 
-    scenario_label = font_small.render("Scenario", True, MUTED_TEXT)
-    screen.blit(scenario_label, (content_x, content_y))
-    content_y += line_gap - 6
-    scenario_text = font.render(telemetry.selected_mode, True, TEXT_COLOR)
+    scenario_text = font.render(f"{telemetry.selected_mode}", True, TEXT_COLOR)
+    drive_text = font.render(f"{active_drive_mode}", True, TEXT_COLOR)
     screen.blit(scenario_text, (content_x, content_y))
-    content_y += line_gap
-
-    drive_label = font_small.render("Drive mode", True, MUTED_TEXT)
-    screen.blit(drive_label, (content_x, content_y))
-    content_y += line_gap - 6
-    drive_text = font.render(active_drive_mode, True, TEXT_COLOR)
-    screen.blit(drive_text, (content_x, content_y))
-    content_y += line_gap + 4
-
-    timer_label = font_small.render("Mission time", True, MUTED_TEXT)
-    screen.blit(timer_label, (content_x, content_y))
-    content_y += line_gap - 6
-    timer_big = pygame.font.SysFont(None, 36).render(timer_text, True, SPEED_COLOR)
-    screen.blit(timer_big, (content_x, content_y))
-    content_y += line_gap + 6
-
-    distance_text = font.render(f"Distance: {telemetry.distance_traveled_meters:.1f} m", True, TEXT_COLOR)
-    screen.blit(distance_text, (content_x, content_y))
-    content_y += line_gap
+    screen.blit(drive_text, (content_x + 170, content_y))
+    content_y += line_gap + 2
 
     route_label = font_small.render("Route tracking", True, MUTED_TEXT)
     screen.blit(route_label, (content_x, content_y))
@@ -185,6 +166,17 @@ def render_hud(screen, telemetry, active_drive_mode):
         TEXT_COLOR,
     )
     screen.blit(auto_time_text, (content_x, content_y))
+
+    timer_big = pygame.font.SysFont(None, 40).render(timer_text, True, SPEED_COLOR)
+    time_rect = timer_big.get_rect(bottomright=(screen.get_width() - 20, screen.get_height() - 20))
+    screen.blit(timer_big, time_rect)
+    distance_big = pygame.font.SysFont(None, 32).render(
+        f"{telemetry.distance_traveled_meters:.1f} m",
+        True,
+        TEXT_COLOR,
+    )
+    distance_rect = distance_big.get_rect(bottomright=(screen.get_width() - 20, time_rect.top - 10))
+    screen.blit(distance_big, distance_rect)
 
     speed_rect = pygame.Rect(16, screen.get_height() - 200, 260, 190)
     _draw_speedometer(screen, speed_rect, telemetry.current_speed_kmh)
