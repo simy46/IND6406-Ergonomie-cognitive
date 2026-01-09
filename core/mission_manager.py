@@ -126,10 +126,12 @@ class MissionManager:
         self.route = compute_route(self.world, self.start.location, self.destination.location)
         self.reset_vehicle_to_spawn(self.start)
         avoid_locations = [wp.transform.location for wp, _ in self.route]
+        avoid_road_ids = {wp.road_id for wp, _ in self.route}
         self.traffic_controller.apply(
             traffic_enabled,
             self.vehicle.get_location(),
             avoid_locations,
+            avoid_road_ids,
         )
         self.autonomous_driver = None
         self.takeover_controller = None
