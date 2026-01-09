@@ -5,6 +5,13 @@ from core.mission import (
     reached_destination,
     toggle_manual_auto,
 )
+from core.constants import (
+    MODE_MANUAL,
+    MODE_AUTOMATIC,
+    MODE_TAKEOVER,
+    DRIVE_MANUAL,
+    DRIVE_AUTOMATIC,
+)
 from core.telemetry import Telemetry
 from core.logger import append_row
 from scenarios.scenario_autonomous import AutonomousDriver
@@ -56,7 +63,7 @@ class MissionManager:
         if self.telemetry is not None:
             self.telemetry.record_mode_switch()
     def mission_is_done(self):
-        if self.active_drive_mode == "auto" and self.autonomous_driver is not None:
+        if self.active_drive_mode == DRIVE_AUTOMATIC and self.autonomous_driver is not None:
             return self.autonomous_driver.is_done()
         return reached_destination(self.vehicle, self.destination)
 
@@ -105,15 +112,15 @@ class MissionManager:
         self.reset_vehicle_to_spawn(self.start)
         self.autonomous_driver = None
         self.takeover_controller = None
-        if self.selected_mode == "manual":
-            self.active_drive_mode = "manual"
-        elif self.selected_mode == "auto":
+        if self.selected_mode == MODE_MANUAL:
+            self.active_drive_mode = DRIVE_MANUAL
+        elif self.selected_mode == MODE_AUTOMATIC:
             self.ensure_autonomous_driver()
-            self.active_drive_mode = "auto"
-        elif self.selected_mode == "takeover":
+            self.active_drive_mode = DRIVE_AUTOMATIC
+        elif self.selected_mode == MODE_TAKEOVER:
             self.ensure_autonomous_driver()
             self.takeover_controller = TakeoverController(self.vehicle, self.autonomous_driver, self.wheel)
-            self.active_drive_mode = "auto"  # commence en auto
+            self.active_drive_mode = DRIVE_AUTOMATIC  # commence en auto
         self.telemetry = Telemetry(
             self.world,
             self.vehicle,
@@ -133,21 +140,21 @@ class MissionManager:
     def run_mission_mode(self):
         if not self.mission_active:
             return
-        if self.selected_mode == "takeover" and self.takeover_controller is not None:
+        if self.selected_mode == MODE_TAKEOVER and self.takeover_controller is not None:
             if self.takeover_controller.should_request_manual():
-                if self.active_drive_mode != "manual":
-                    self.active_drive_mode = "manual"
+                if self.active_drive_mode != DRIVE_MANUAL:
+                    self.active_drive_mode = DRIVE_MANUAL
                     print("[TAKEOVER] Switching to MANUAL (requested)")
-            if self.active_drive_mode == "auto":
+            if self.active_drive_mode == DRIVE_AUTOMATIC:
                 self.takeover_controller.update_auto_only()
             else:
                 if self.takeover_controller.detect_human_input():
                     self.takeover_controller.mark_manual_override(reason="human_input")
                 run_manual_mode(self.context)
         else:
-            if self.active_drive_mode == "manual":
+            if self.active_drive_mode == DRIVE_MANUAL:
                 run_manual_mode(self.context)
-            elif self.active_drive_mode == "auto":
+            elif self.active_drive_mode == DRIVE_AUTOMATIC:
                 self.ensure_autonomous_driver()
                 self.autonomous_driver.run_step()
 

@@ -1,6 +1,8 @@
 import math
 import pygame
 
+from core.constants import MODE_TAKEOVER
+
 
 PANEL_BG = (15, 15, 18, 215)
 PANEL_BORDER = (0, 180, 220)
@@ -172,7 +174,7 @@ def render_hud(screen, telemetry, active_drive_mode):
         col1_x,
         row2_y,
     )
-    if telemetry.selected_mode == "takeover":
+    if telemetry.selected_mode == MODE_TAKEOVER:
         requested = "YES" if telemetry.takeover_requested else "NO"
         reaction = telemetry.get_takeover_reaction_time()
         reaction_text = "N/A" if reaction is None else f"{reaction:.2f}s"

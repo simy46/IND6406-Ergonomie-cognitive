@@ -1,4 +1,5 @@
 import pygame
+from core.constants import MODE_MANUAL, MODE_AUTOMATIC, MODE_TAKEOVER
 
 
 def mission_popup(screen, clock):
@@ -15,9 +16,9 @@ def mission_popup(screen, clock):
     selected_mode = None
 
     modes = [
-        ("manual", "Conduite manuelle"),
-        ("auto", "Conduite automatique"),
-        ("takeover", "Auto + reprise humaine"),
+        (MODE_MANUAL, "Conduite manuelle"),
+        (MODE_AUTOMATIC, "Conduite automatique"),
+        (MODE_TAKEOVER, "Auto + reprise humaine"),
     ]
 
     running = True

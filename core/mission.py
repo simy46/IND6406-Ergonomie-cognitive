@@ -34,12 +34,15 @@ def reached_destination(vehicle, destination, threshold=5.0):
     return vehicle.get_location().distance(destination.location) < threshold
 
 
+from core.constants import DRIVE_AUTOMATIC, DRIVE_MANUAL
+
+
 def toggle_manual_auto(active_drive_mode, ensure_autonomous_driver, takeover_controller):
-    if active_drive_mode == "auto":
+    if active_drive_mode == DRIVE_AUTOMATIC:
         if takeover_controller:
             takeover_controller.play_noa_disabled()
 
-        active_drive_mode = "manual"
+        active_drive_mode = DRIVE_MANUAL
         print("[MODE] Switched to MANUAL")
 
         if takeover_controller:
@@ -50,7 +53,7 @@ def toggle_manual_auto(active_drive_mode, ensure_autonomous_driver, takeover_con
         if takeover_controller:
             takeover_controller.play_noa_enabled()
 
-        active_drive_mode = "auto"
+        active_drive_mode = DRIVE_AUTOMATIC
         print("[MODE] Switched to AUTO")
 
     return active_drive_mode

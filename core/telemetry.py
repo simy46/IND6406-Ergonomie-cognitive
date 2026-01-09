@@ -4,6 +4,7 @@ from datetime import datetime
 
 import carla
 
+from core.constants import DRIVE_AUTOMATIC, DRIVE_MANUAL
 from core.route_metrics import RouteMetrics
 
 
@@ -110,9 +111,9 @@ class Telemetry:
             self.max_speed_kmh = speed_kmh
         self.speed_time_sum += speed_kmh * dt
         self.speed_time_total += dt
-        if active_drive_mode == "manual":
+        if active_drive_mode == DRIVE_MANUAL:
             self.manual_time_seconds += dt
-        elif active_drive_mode == "auto":
+        elif active_drive_mode == DRIVE_AUTOMATIC:
             self.auto_time_seconds += dt
         self.route_metrics.update(location, dt)
         if self.takeover_controller is not None:
