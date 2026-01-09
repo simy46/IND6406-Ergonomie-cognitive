@@ -23,7 +23,15 @@ from ui.pause import render_pause_screen
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((1280, 720), pygame.RESIZABLE | pygame.SCALED)
+    display_info = pygame.display.Info()
+    max_width = 1920
+    max_height = 1080
+    target_width = min(display_info.current_w, max_width)
+    target_height = min(display_info.current_h, max_height)
+    screen = pygame.display.set_mode(
+        (target_width, target_height),
+        pygame.RESIZABLE | pygame.SCALED
+    )
     pygame.display.set_caption("CARLA Simulator")
 
     # =========================
@@ -50,7 +58,7 @@ def main():
     # =========================
     # CAMERA + INPUT
     # =========================
-    camera = CameraRGB(world, vehicle)
+    camera = CameraRGB(world, vehicle, width=target_width, height=target_height)
     wheel = SteeringWheel(debug=True)
     mission_manager = MissionManager(world, vehicle, wheel)
     pause_controller = PauseController(vehicle)
@@ -67,6 +75,8 @@ def main():
         dt = clock.get_time() / 1000.0
         if pause_controller.telemetry is not mission_manager.telemetry:
             pause_controller.set_telemetry(mission_manager.telemetry)
+        screen_width, screen_height = screen.get_size()
+        camera.set_resolution(screen_width, screen_height)
 
         # -------------------------
         # EVENTS
