@@ -23,7 +23,7 @@ from ui.pause import render_pause_screen
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((1280, 720))
+    screen = pygame.display.set_mode((1280, 720), pygame.RESIZABLE | pygame.SCALED)
     pygame.display.set_caption("CARLA Simulator")
 
     # =========================

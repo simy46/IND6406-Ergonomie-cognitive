@@ -55,7 +55,11 @@ class CameraRGB:
 
     def render(self, screen):
         if self.surface:
-            screen.blit(self.surface, (0, 0))
+            if self.surface.get_size() != screen.get_size():
+                scaled = pygame.transform.scale(self.surface, screen.get_size())
+                screen.blit(scaled, (0, 0))
+            else:
+                screen.blit(self.surface, (0, 0))
 
     def destroy(self):
         if self.sensor:
