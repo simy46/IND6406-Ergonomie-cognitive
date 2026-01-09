@@ -97,7 +97,7 @@ def mission_popup(screen, clock):
         # NAME INPUT
         # =========================
         screen.blit(
-            font.render("Nom de l'élève (pour fichier_nom.csv) :", True, (220, 220, 220)),
+            font.render("Nom :", True, (220, 220, 220)),
             (POP_X + 80, POP_Y + 110)
         )
 

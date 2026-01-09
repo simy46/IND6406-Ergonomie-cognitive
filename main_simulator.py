@@ -164,6 +164,7 @@ def main():
             )
 
             if mission_manager.show_restart_prompt:
+                hud_visible = True
                 draw_center_message(
                     screen,
                     "Mission terminée: Appuyez sur [ESPACE]",
