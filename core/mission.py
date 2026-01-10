@@ -60,7 +60,7 @@ def pick_long_route(world):
     min_speed_ms = max(0.1, ROUTE_SPEED_KMH / 3.6)
     min_length = max(ROUTE_MIN_METERS, min_speed_ms * ROUTE_MIN_SECONDS)
     total_attempts = 0
-    while True:
+    while total_attempts < ROUTE_MAX_TOTAL_ATTEMPTS:
         for _ in range(ROUTE_ATTEMPTS):
             total_attempts += 1
             start = random.choice(spawn_points)
@@ -76,11 +76,10 @@ def pick_long_route(world):
                 best_length = length
         if total_attempts >= ROUTE_MAX_TOTAL_ATTEMPTS:
             if ROUTE_STRICT_MIN:
-                total_attempts = 0
-                print("[ROUTE] Recherche d'un trajet plus long...")
-                continue
-            if best is not None:
-                return best
+                print("[ROUTE] Trajet long non trouve, nouveau cycle.")
+            break
+    if best is not None:
+        return best
     start, dest = pick_start_and_destination(world)
     route = compute_route(world, start.location, dest.location)
     return start, dest, route
