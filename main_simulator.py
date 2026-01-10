@@ -92,8 +92,6 @@ def main():
             dt = clock.get_time() / 1000.0
             if pause_controller.telemetry is not mission_manager.telemetry:
                 pause_controller.set_telemetry(mission_manager.telemetry)
-            if sync_enabled and not pause_controller.paused:
-                world.tick()
 
             # -------------------------
             # EVENTS
@@ -127,6 +125,8 @@ def main():
             if mission_manager.in_menu:
                 if not mission_manager.run_menu(screen, clock):
                     break
+            if sync_enabled and mission_manager.mission_active and not pause_controller.paused:
+                world.tick()
 
             if pause_controller.paused:
                 render_pause_screen(screen)

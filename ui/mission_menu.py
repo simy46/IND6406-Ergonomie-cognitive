@@ -37,6 +37,8 @@ def mission_popup(screen, clock):
                 elif event.key == pygame.K_RETURN:
                     if name.strip() and selected_mode:
                         return name.strip(), selected_mode, traffic_enabled
+                elif event.key == pygame.K_t:
+                    traffic_enabled = not traffic_enabled
                 elif event.unicode.isprintable() and len(name) < 20:
                     name += event.unicode
 
@@ -146,8 +148,9 @@ def mission_popup(screen, clock):
                 (checkbox_x + 4, checkbox_y + 4, checkbox_size - 8, checkbox_size - 8),
                 border_radius=3
             )
+        traffic_label = "Activer trafic léger [T]"
         screen.blit(
-            font.render("Activer trafic léger", True, (220, 220, 220)),
+            font.render(traffic_label, True, (220, 220, 220)),
             (checkbox_x + 36, checkbox_y - 2)
         )
 
