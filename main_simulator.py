@@ -126,7 +126,13 @@ def main():
                 if not mission_manager.run_menu(screen, clock):
                     break
             if sync_enabled and mission_manager.mission_active and not pause_controller.paused:
-                world.tick()
+                try:
+                    world.tick()
+                except RuntimeError as e:
+                    print(f"[WARN] world.tick failed: {e}")
+                    sync_enabled = False
+                    if traffic_manager is not None:
+                        traffic_manager.set_synchronous_mode(False)
 
             if pause_controller.paused:
                 render_pause_screen(screen)
