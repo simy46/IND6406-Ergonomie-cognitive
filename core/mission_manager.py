@@ -19,6 +19,7 @@ from core.constants import (
     TRAFFIC_AVOID_ROUTE_ROADS,
     CHAIN_ENABLED,
     CHAIN_MIN_SECONDS,
+    CHAIN_PREVIEW_DISTANCE_METERS,
 )
 from core.traffic import TrafficController
 from core.telemetry import Telemetry
@@ -45,6 +46,8 @@ class MissionManager:
         self.start = None
         self.destination = None
         self.route = None
+        self.next_route = None
+        self.next_destination = None
         self.last_debug_draw = 0.0
         self.telemetry = None
         self.traffic_controller = TrafficController(
@@ -105,6 +108,8 @@ class MissionManager:
         self.selected_mode = None
         self.active_drive_mode = None
         self.last_debug_draw = 0.0
+        self.next_route = None
+        self.next_destination = None
         self.traffic_controller.destroy_all()
         if self.telemetry is not None:
             self.telemetry.cleanup()
@@ -128,6 +133,8 @@ class MissionManager:
             return False
         self.start, self.destination = pick_start_and_destination(self.world)
         self.route = compute_route(self.world, self.start.location, self.destination.location)
+        self.next_route = None
+        self.next_destination = None
         self.reset_vehicle_to_spawn(self.start)
         avoid_locations = [wp.transform.location for wp, _ in self.route]
         avoid_road_ids = None
@@ -163,8 +170,29 @@ class MissionManager:
         self.in_menu = False
         self.show_restart_prompt = False
         self.last_debug_draw = 0.0
+        self.next_route = None
+        self.next_destination = None
         print(f"[MISSION] Student={self.student_name} | selected_mode={self.selected_mode}")
         return True
+
+    def prepare_next_route(self):
+        if not CHAIN_ENABLED or self.telemetry is None or self.next_route is not None:
+            return
+        elapsed = self.telemetry.get_mission_elapsed_seconds()
+        if elapsed >= CHAIN_MIN_SECONDS:
+            return
+        distance = self.vehicle.get_location().distance(self.destination.location)
+        if distance > CHAIN_PREVIEW_DISTANCE_METERS:
+            return
+        new_dest = pick_destination_far(self.world, self.vehicle.get_location())
+        new_route = compute_route(
+            self.world,
+            self.vehicle.get_location(),
+            new_dest.location
+        )
+        self.next_destination = new_dest
+        self.next_route = new_route
+        print("[MISSION] Nouveau trajet precharge")
 
     def run_mission_mode(self):
         if not self.mission_active:
@@ -202,14 +230,20 @@ class MissionManager:
             if CHAIN_ENABLED and self.telemetry is not None:
                 elapsed = self.telemetry.get_mission_elapsed_seconds()
                 if elapsed < CHAIN_MIN_SECONDS:
-                    new_dest = pick_destination_far(self.world, self.vehicle.get_location())
-                    new_route = compute_route(
-                        self.world,
-                        self.vehicle.get_location(),
-                        new_dest.location
-                    )
-                    self.destination = new_dest
-                    self.route = new_route
+                    if self.next_route is not None and self.next_destination is not None:
+                        self.destination = self.next_destination
+                        self.route = self.next_route
+                    else:
+                        new_dest = pick_destination_far(self.world, self.vehicle.get_location())
+                        new_route = compute_route(
+                            self.world,
+                            self.vehicle.get_location(),
+                            new_dest.location
+                        )
+                        self.destination = new_dest
+                        self.route = new_route
+                    self.next_route = None
+                    self.next_destination = None
                     self.autonomous_driver = None
                     if self.selected_mode == MODE_AUTOMATIC:
                         self.ensure_autonomous_driver()

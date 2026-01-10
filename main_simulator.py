@@ -145,12 +145,16 @@ def main():
             # =========================
             mission_manager.run_mission_mode()
             mission_manager.update_telemetry(dt)
+            mission_manager.prepare_next_route()
 
             # =========================
             # DEBUG DRAW (1 Hz)
             # =========================
             if mission_manager.should_draw_debug(now):
-                draw_route(world, mission_manager.route)
+                route_to_draw = mission_manager.route
+                if mission_manager.next_route is not None:
+                    route_to_draw = mission_manager.next_route
+                draw_route(world, route_to_draw)
                 draw_destination_marker = True
                 if CHAIN_ENABLED and mission_manager.telemetry is not None:
                     elapsed = mission_manager.telemetry.get_mission_elapsed_seconds()
