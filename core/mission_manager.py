@@ -225,6 +225,7 @@ class MissionManager:
                                 self.wheel
                             )
                     self.telemetry.update_route(self.route, self.destination, self.takeover_controller)
+                    self.last_debug_draw = 0.0
                     print("[MISSION] Nouveau trajet: durée minimale non atteinte")
                     return
             self.mission_active = False
