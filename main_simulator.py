@@ -23,12 +23,21 @@ from ui.pause import render_pause_screen
 
 
 def cleanup_world_actors(world):
-    for pattern in ("vehicle.*", "walker.pedestrian.*", "controller.ai.walker"):
+    for pattern in ("vehicle.*", "walker.pedestrian.*", "controller.ai.walker", "sensor.*"):
         for actor in world.get_actors().filter(pattern):
             try:
                 actor.destroy()
             except Exception:
                 pass
+
+
+def safe_destroy(actor):
+    if actor is None:
+        return
+    try:
+        actor.destroy()
+    except Exception:
+        pass
 
 
 def connect_world(client, attempts=5, delay=2.0, do_reload=True):
@@ -54,6 +63,9 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode((1280, 720), pygame.RESIZABLE | pygame.SCALED)
     pygame.display.set_caption("CARLA Simulator")
+    camera = None
+    vehicle = None
+    mission_manager = None
 
     # =========================
     # CARLA CONNECT
@@ -210,17 +222,29 @@ def main():
             pygame.display.flip()
 
     finally:
-        if sync_enabled:
-            world.apply_settings(original_settings)
-            if traffic_manager is not None:
-                traffic_manager.set_synchronous_mode(False)
-
         # =========================
         # CLEAN EXIT
         # =========================
+        try:
+            if mission_manager is not None:
+                mission_manager.traffic_controller.destroy_all()
+                if mission_manager.telemetry is not None:
+                    mission_manager.telemetry.cleanup()
+        except Exception:
+            pass
+        safe_destroy(camera)
+        safe_destroy(vehicle)
         cleanup_world_actors(world)
-        camera.destroy()
-        vehicle.destroy()
+        if sync_enabled:
+            try:
+                world.apply_settings(original_settings)
+            except Exception:
+                pass
+        if traffic_manager is not None:
+            try:
+                traffic_manager.set_synchronous_mode(False)
+            except Exception:
+                pass
         pygame.quit()
         print("Exited cleanly")
 
