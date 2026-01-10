@@ -14,11 +14,11 @@ def draw_route(world, route, life_time=1.1):
 def draw_destination(world, location, life_time=1.1):
     start = location + carla.Location(z=3.0)
     end = location + carla.Location(z=0.6)
-    color = carla.Color(235, 235, 235)
+    color = carla.Color(220, 220, 220)
     world.debug.draw_line(
         start,
         end,
-        thickness=0.12,
+        thickness=0.05,
         color=color,
         life_time=life_time
     )
@@ -27,14 +27,14 @@ def draw_destination(world, location, life_time=1.1):
     world.debug.draw_line(
         left,
         end,
-        thickness=0.12,
+        thickness=0.05,
         color=color,
         life_time=life_time
     )
     world.debug.draw_line(
         right,
         end,
-        thickness=0.12,
+        thickness=0.05,
         color=color,
         life_time=life_time
     )
