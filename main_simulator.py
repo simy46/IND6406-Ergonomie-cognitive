@@ -152,13 +152,18 @@ def main():
             # =========================
             if mission_manager.should_draw_debug(now):
                 draw_route(world, mission_manager.route)
-                if mission_manager.next_route is not None:
-                    draw_route(world, mission_manager.next_route)
                 draw_destination_marker = True
+                draw_next_route = False
                 if CHAIN_ENABLED and mission_manager.telemetry is not None:
                     elapsed = mission_manager.telemetry.get_mission_elapsed_seconds()
                     if elapsed < CHAIN_MIN_SECONDS:
-                        draw_destination_marker = False
+                        draw_next_route = mission_manager.next_route is not None
+                        draw_destination_marker = not draw_next_route
+                    else:
+                        draw_next_route = False
+                        draw_destination_marker = True
+                if draw_next_route and mission_manager.next_route is not None:
+                    draw_route(world, mission_manager.next_route)
                 if draw_destination_marker:
                     draw_destination(world, mission_manager.destination.location)
 
