@@ -126,6 +126,13 @@ class Telemetry:
     def get_mission_elapsed_seconds(self):
         return self._get_elapsed_seconds()
 
+    def update_route(self, route, destination, takeover_controller=None):
+        self.route = route
+        self.destination = destination
+        self.route_metrics = RouteMetrics(self.route)
+        if takeover_controller is not None:
+            self.takeover_controller = takeover_controller
+
     def pause(self):
         if self.paused:
             return

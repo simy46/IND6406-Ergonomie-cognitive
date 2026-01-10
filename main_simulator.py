@@ -12,7 +12,6 @@ sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, r"D:\CARLA\PythonAPI\carla")
 
 from core.mission import pick_start_and_destination
-from core.constants import CARLA_TIMEOUT_SECONDS, SIM_SYNC_MODE
 from core.mission_manager import MissionManager
 from core.route_visualizer import draw_route, draw_destination
 from core.camera import CameraRGB
@@ -40,7 +39,7 @@ def main():
     # CARLA CONNECT
     # =========================
     client = carla.Client("127.0.0.1", 2000)
-    client.set_timeout(CARLA_TIMEOUT_SECONDS)
+    client.set_timeout(5.0)
     world = client.get_world()
     try:
         world = client.reload_world()
@@ -48,7 +47,7 @@ def main():
         print(f"[WARN] reload_world failed: {e}")
         world = client.get_world()
     original_settings = world.get_settings()
-    sync_enabled = SIM_SYNC_MODE
+    sync_enabled = True
     traffic_manager = None
     if sync_enabled:
         settings = world.get_settings()

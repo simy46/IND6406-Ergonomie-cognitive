@@ -1,6 +1,7 @@
 import carla
 from core.mission import (
-    pick_long_route,
+    compute_route,
+    pick_destination_far,
     pick_start_and_destination,
     reached_destination,
     toggle_manual_auto,
@@ -16,6 +17,8 @@ from core.constants import (
     TRAFFIC_MIN_DISTANCE_FROM_EGO,
     TRAFFIC_MIN_DISTANCE_FROM_ROUTE,
     TRAFFIC_AVOID_ROUTE_ROADS,
+    CHAIN_ENABLED,
+    CHAIN_MIN_SECONDS,
 )
 from core.traffic import TrafficController
 from core.telemetry import Telemetry
@@ -123,7 +126,8 @@ class MissionManager:
         self.student_name, self.selected_mode, traffic_enabled = mission_popup(screen, clock)
         if not self.student_name:
             return False
-        self.start, self.destination, self.route = pick_long_route(self.world)
+        self.start, self.destination = pick_start_and_destination(self.world)
+        self.route = compute_route(self.world, self.start.location, self.destination.location)
         self.reset_vehicle_to_spawn(self.start)
         avoid_locations = [wp.transform.location for wp, _ in self.route]
         avoid_road_ids = None
@@ -195,6 +199,30 @@ class MissionManager:
 
     def check_end(self):
         if self.mission_active and self.mission_is_done():
+            if CHAIN_ENABLED and self.telemetry is not None:
+                elapsed = self.telemetry.get_mission_elapsed_seconds()
+                if elapsed < CHAIN_MIN_SECONDS:
+                    new_dest = pick_destination_far(self.world, self.vehicle.get_location())
+                    new_route = compute_route(
+                        self.world,
+                        self.vehicle.get_location(),
+                        new_dest.location
+                    )
+                    self.destination = new_dest
+                    self.route = new_route
+                    self.autonomous_driver = None
+                    if self.selected_mode == MODE_AUTOMATIC:
+                        self.ensure_autonomous_driver()
+                    elif self.selected_mode == MODE_TAKEOVER:
+                        self.ensure_autonomous_driver()
+                        self.takeover_controller = TakeoverController(
+                            self.vehicle,
+                            self.autonomous_driver,
+                            self.wheel
+                        )
+                    self.telemetry.update_route(self.route, self.destination, self.takeover_controller)
+                    print("[MISSION] Nouveau trajet: durée minimale non atteinte")
+                    return
             self.mission_active = False
             self.show_restart_prompt = True
             self.freeze_vehicle_end()
