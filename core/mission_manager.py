@@ -184,10 +184,10 @@ class MissionManager:
         distance = self.vehicle.get_location().distance(self.destination.location)
         if distance > CHAIN_PREVIEW_DISTANCE_METERS:
             return
-        new_dest = pick_destination_far(self.world, self.vehicle.get_location())
+        new_dest = pick_destination_far(self.world, self.destination.location)
         new_route = compute_route(
             self.world,
-            self.vehicle.get_location(),
+            self.destination.location,
             new_dest.location
         )
         self.next_destination = new_dest
@@ -234,10 +234,10 @@ class MissionManager:
                         self.destination = self.next_destination
                         self.route = self.next_route
                     else:
-                        new_dest = pick_destination_far(self.world, self.vehicle.get_location())
+                        new_dest = pick_destination_far(self.world, self.destination.location)
                         new_route = compute_route(
                             self.world,
-                            self.vehicle.get_location(),
+                            self.destination.location,
                             new_dest.location
                         )
                         self.destination = new_dest
