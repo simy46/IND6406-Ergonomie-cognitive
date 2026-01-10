@@ -31,6 +31,25 @@ def cleanup_world_actors(world):
                 pass
 
 
+def connect_world(client, attempts=5, delay=2.0, do_reload=True):
+    last_err = None
+    for attempt in range(1, attempts + 1):
+        try:
+            world = client.get_world()
+            if do_reload:
+                try:
+                    world = client.reload_world()
+                except RuntimeError as e:
+                    print(f"[WARN] reload_world failed: {e}")
+                    world = client.get_world()
+            return world
+        except RuntimeError as e:
+            last_err = e
+            print(f"[WARN] connect attempt {attempt}/{attempts} failed: {e}")
+            time.sleep(delay)
+    raise last_err
+
+
 def main():
     pygame.init()
     screen = pygame.display.set_mode((1280, 720), pygame.RESIZABLE | pygame.SCALED)
@@ -40,13 +59,9 @@ def main():
     # CARLA CONNECT
     # =========================
     client = carla.Client("127.0.0.1", 2000)
-    client.set_timeout(5.0)
-    world = client.get_world()
-    try:
-        world = client.reload_world()
-    except RuntimeError as e:
-        print(f"[WARN] reload_world failed: {e}")
-        world = client.get_world()
+    client.set_timeout(10.0)
+    # Retry connection in case the simulator is still booting.
+    world = connect_world(client, attempts=6, delay=2.0, do_reload=True)
     original_settings = world.get_settings()
     sync_enabled = True
     traffic_manager = None
