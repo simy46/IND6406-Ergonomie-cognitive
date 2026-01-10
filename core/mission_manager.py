@@ -214,12 +214,16 @@ class MissionManager:
                     if self.selected_mode == MODE_AUTOMATIC:
                         self.ensure_autonomous_driver()
                     elif self.selected_mode == MODE_TAKEOVER:
-                        self.ensure_autonomous_driver()
-                        self.takeover_controller = TakeoverController(
-                            self.vehicle,
-                            self.autonomous_driver,
-                            self.wheel
-                        )
+                        if self.takeover_controller is not None:
+                            self.takeover_controller.auto = AutonomousDriver(self.vehicle, self.route)
+                            self.autonomous_driver = self.takeover_controller.auto
+                        else:
+                            self.ensure_autonomous_driver()
+                            self.takeover_controller = TakeoverController(
+                                self.vehicle,
+                                self.autonomous_driver,
+                                self.wheel
+                            )
                     self.telemetry.update_route(self.route, self.destination, self.takeover_controller)
                     print("[MISSION] Nouveau trajet: durée minimale non atteinte")
                     return

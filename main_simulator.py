@@ -12,6 +12,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, r"D:\CARLA\PythonAPI\carla")
 
 from core.mission import pick_start_and_destination
+from core.constants import CHAIN_ENABLED, CHAIN_MIN_SECONDS
 from core.mission_manager import MissionManager
 from core.route_visualizer import draw_route, draw_destination
 from core.camera import CameraRGB
@@ -150,7 +151,13 @@ def main():
             # =========================
             if mission_manager.should_draw_debug(now):
                 draw_route(world, mission_manager.route)
-                draw_destination(world, mission_manager.destination.location)
+                draw_destination_marker = True
+                if CHAIN_ENABLED and mission_manager.telemetry is not None:
+                    elapsed = mission_manager.telemetry.get_mission_elapsed_seconds()
+                    if elapsed < CHAIN_MIN_SECONDS:
+                        draw_destination_marker = False
+                if draw_destination_marker:
+                    draw_destination(world, mission_manager.destination.location)
 
             # =========================
             # MISSION END CHECK
