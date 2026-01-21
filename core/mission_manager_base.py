@@ -57,6 +57,16 @@ class MissionManagerBase:
         )
 
     def reset_state_to_menu(self):
+        was_active = self.mission_active
+        should_log = was_active and not self.show_restart_prompt
+        if should_log and self.telemetry is not None:
+            from core.logger import append_row
+
+            metrics = self.telemetry.finalize()
+            append_row(metrics)
+            self.telemetry.cleanup()
+            self.telemetry.pause()
+            self.telemetry = None
         self.in_menu = True
         self.mission_active = False
         self.show_restart_prompt = False
