@@ -7,9 +7,9 @@ from ui.mission_menu_step1 import draw_step_name_mode
 from ui.mission_menu_step2 import draw_step_nback_config
 
 
-def mission_popup(screen, clock):
+def mission_popup(screen, clock, initial_name=""):
     fonts = build_fonts()
-    state = init_state()
+    state = init_state(initial_name)
     modes = build_modes()
 
     while True:

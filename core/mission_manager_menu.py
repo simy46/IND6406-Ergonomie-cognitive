@@ -21,7 +21,7 @@ class MissionManagerMenuMixin:
     def run_menu(self, screen, clock):
         if not self.in_menu:
             return True
-        result = mission_popup(screen, clock)
+        result = mission_popup(screen, clock, initial_name=self.student_name or "")
         if not result or result[0] is None:
             return False
         self.student_name, self.selected_mode, traffic_enabled, nback_config, nback_enabled = result

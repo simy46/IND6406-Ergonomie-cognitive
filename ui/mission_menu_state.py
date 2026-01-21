@@ -9,9 +9,9 @@ from core.constants import (
 )
 
 
-def init_state():
+def init_state(initial_name=""):
     return {
-        "name": "",
+        "name": initial_name or "",
         "selected_mode": None,
         "traffic_enabled": True,
         "nback_enabled": True,
