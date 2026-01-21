@@ -10,7 +10,7 @@ def render_nback(screen, task, elapsed_seconds=None):
     width, height = screen.get_size()
     padding = max(16, int(min(width, height) * 0.03))
     box_size = int(min(width, height) * 0.7)
-    box_size = max(28, min(box_size, 64))
+    box_size = max(28, min(box_size, 72))
     gap = max(10, int(box_size * 0.35))
 
     total_width = (box_size * task.positions) + (gap * (task.positions - 1))
