@@ -1,6 +1,7 @@
 from core.constants import (
     DRIVE_MANUAL,
     DRIVE_AUTOMATIC,
+    MODE_AUTOMATIC,
     MODE_TAKEOVER,
 )
 from core.mission import toggle_manual_auto

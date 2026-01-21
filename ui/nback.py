@@ -31,12 +31,18 @@ def render_nback(screen, task, elapsed_seconds=None):
     flash_color = None
     if elapsed_seconds is not None and task.last_response_time is not None:
         if (elapsed_seconds - task.last_response_time) <= 0.25:
-            flash_color = (0, 200, 120) if task.last_response_was_target else (220, 80, 80)
+            if task.last_response_kind == "hit":
+                flash_color = (0, 200, 120)
+            elif task.last_response_kind == "false_alarm":
+                flash_color = (220, 80, 80)
+            else:
+                flash_color = (170, 170, 170)
 
+    show_active = True
     if elapsed_seconds is not None and task.current_start_time is not None:
         on_duration = max(0.0, task.interval_seconds - NBACK_STIMULUS_OFF_GAP_SECONDS)
         if (elapsed_seconds - task.current_start_time) >= on_duration:
-            return
+            show_active = False
 
     pulse_alpha = 0
     if elapsed_seconds is not None and task.current_start_time is not None:
@@ -47,7 +53,7 @@ def render_nback(screen, task, elapsed_seconds=None):
     for index in range(task.positions):
         x = x_start + index * (box_size + gap)
         rect = pygame.Rect(x, y_start, box_size, box_size)
-        if index == task.current_position:
+        if show_active and index == task.current_position:
             pygame.draw.rect(screen, active_fill, rect, border_radius=6)
             pygame.draw.rect(screen, active_outline, rect, 2, border_radius=6)
             if pulse_alpha > 0:

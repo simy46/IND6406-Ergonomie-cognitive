@@ -26,6 +26,7 @@ class SpatialNBackTask:
         self.completed = False
         self.last_response_time = None
         self.last_response_was_target = None
+        self.last_response_kind = None
 
     def _start_trial(self, elapsed_seconds):
         if self.trials_presented >= self.total_trials:
@@ -43,6 +44,7 @@ class SpatialNBackTask:
         self.current_start_time = elapsed_seconds
         self.current_reaction_time = None
         self.trials_presented += 1
+        self.last_response_kind = None
         if is_target:
             self.targets_count += 1
 
@@ -68,12 +70,18 @@ class SpatialNBackTask:
         if self.current_position is None:
             self._start_trial(elapsed_seconds)
             return
-        if user_clicked and not self.current_clicked:
-            self.current_clicked = True
-            self.last_response_time = elapsed_seconds
-            self.last_response_was_target = self.current_is_target
-            if self.current_is_target:
-                self.current_reaction_time = elapsed_seconds - self.current_start_time
+        if user_clicked:
+            if not self.current_clicked:
+                self.current_clicked = True
+                self.last_response_time = elapsed_seconds
+                self.last_response_was_target = self.current_is_target
+                self.last_response_kind = "hit" if self.current_is_target else "false_alarm"
+                if self.current_is_target:
+                    self.current_reaction_time = elapsed_seconds - self.current_start_time
+            else:
+                self.last_response_time = elapsed_seconds
+                self.last_response_was_target = None
+                self.last_response_kind = "neutral"
         if (elapsed_seconds - self.current_start_time) >= self.interval_seconds:
             self._finalize_current_trial()
             if self.trials_presented >= self.total_trials:
