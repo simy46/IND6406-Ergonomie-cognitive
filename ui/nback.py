@@ -31,12 +31,22 @@ def render_nback(screen, task, elapsed_seconds=None):
         if (elapsed_seconds - task.last_response_time) <= 0.25:
             flash_color = (0, 200, 120) if task.last_response_was_target else (220, 80, 80)
 
+    pulse_alpha = 0
+    if elapsed_seconds is not None and task.current_start_time is not None:
+        elapsed_since_start = elapsed_seconds - task.current_start_time
+        if elapsed_since_start < 0.35:
+            pulse_alpha = int(90 * (1.0 - (elapsed_since_start / 0.35)))
+
     for index in range(task.positions):
         x = x_start + index * (box_size + gap)
         rect = pygame.Rect(x, y_start, box_size, box_size)
         if index == task.current_position:
             pygame.draw.rect(screen, active_fill, rect, border_radius=6)
             pygame.draw.rect(screen, active_outline, rect, 2, border_radius=6)
+            if pulse_alpha > 0:
+                pulse_surface = pygame.Surface(rect.size, pygame.SRCALPHA)
+                pulse_surface.fill((255, 255, 255, pulse_alpha))
+                screen.blit(pulse_surface, rect.topleft)
         else:
             pygame.draw.rect(screen, base_color, rect, border_radius=6)
             pygame.draw.rect(screen, outline, rect, 2, border_radius=6)
