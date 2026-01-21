@@ -2,7 +2,7 @@ import csv
 from pathlib import Path
 
 
-FIELDNAMES = [
+MISSION_FIELDNAMES = [
     "timestamp",
     "student_name",
     "selected_mode",
@@ -20,6 +20,9 @@ FIELDNAMES = [
     "mode_switch_count",
     "takeover_requested",
     "takeover_reaction_time_seconds",
+]
+
+NBACK_FIELDNAMES = [
     "nback_level",
     "nback_total_trials",
     "nback_targets_count",
@@ -30,17 +33,51 @@ FIELDNAMES = [
 ]
 
 
+def _sanitize_student_name(name):
+    return name.replace("/", "_").replace("\\", "_")
+
+
+def _get_trial_dir(root_dir, student_name, timestamp):
+    student_dir = root_dir / _sanitize_student_name(student_name)
+    student_dir.mkdir(parents=True, exist_ok=True)
+    time_part = "00-00"
+    if timestamp and " " in timestamp:
+        time_part = timestamp.split(" ", 1)[1].replace(":", "-")
+    max_index = -1
+    for path in student_dir.glob("trial_*_*"):
+        parts = path.name.split("_", 2)
+        if len(parts) >= 2:
+            try:
+                max_index = max(max_index, int(parts[1]))
+            except ValueError:
+                continue
+    next_index = max_index + 1
+    trial_dir = student_dir / f"trial_{next_index}_{time_part}"
+    trial_dir.mkdir(parents=True, exist_ok=True)
+    return trial_dir
+
+
+def _write_csv(path, fieldnames, row):
+    with path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerow(row)
+
+
 def append_row(metrics, csv_path=None):
     if csv_path is None:
-        csv_path = Path(__file__).resolve().parent.parent / "missions.csv"
+        root_dir = Path(__file__).resolve().parent.parent / "data"
     else:
-        csv_path = Path(csv_path)
+        root_dir = Path(csv_path)
     try:
-        file_exists = csv_path.exists()
-        with csv_path.open("a", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
-            if not file_exists:
-                writer.writeheader()
-            writer.writerow(metrics)
+        trial_dir = _get_trial_dir(
+            root_dir,
+            metrics.get("student_name", "unknown"),
+            metrics.get("timestamp", ""),
+        )
+        mission_stats = {k: metrics.get(k) for k in MISSION_FIELDNAMES}
+        nback_stats = {k: metrics.get(k) for k in NBACK_FIELDNAMES}
+        _write_csv(trial_dir / "mission_stats.csv", MISSION_FIELDNAMES, mission_stats)
+        _write_csv(trial_dir / "nback.csv", NBACK_FIELDNAMES, nback_stats)
     except Exception as e:
         print(f"[LOGGER][ERROR] Failed to write CSV: {e}")
