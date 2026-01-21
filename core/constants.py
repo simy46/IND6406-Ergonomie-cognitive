@@ -1,9 +1,9 @@
 MODE_MANUAL = "manual"
-MODE_AUTOMATIC = "automatic"
+MODE_AUTONOMOUS = "autonomous"
 MODE_TAKEOVER = "takeover"
 
 DRIVE_MANUAL = "manual"
-DRIVE_AUTOMATIC = "automatic"
+DRIVE_AUTONOMOUS = "autonomous"
 
 TRAFFIC_VEHICLES = 4
 TRAFFIC_PEDESTRIANS = 3

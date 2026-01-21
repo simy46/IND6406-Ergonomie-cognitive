@@ -1,9 +1,9 @@
 from core.constants import (
     MODE_MANUAL,
-    MODE_AUTOMATIC,
+    MODE_AUTONOMOUS,
     MODE_TAKEOVER,
     DRIVE_MANUAL,
-    DRIVE_AUTOMATIC,
+    DRIVE_AUTONOMOUS,
     TRAFFIC_AVOID_ROUTE_ROADS,
     NBACK_LEVEL,
     NBACK_INTERVAL_SECONDS,
@@ -66,15 +66,15 @@ class MissionManagerMenuMixin:
         self.takeover_controller = None
         if self.selected_mode == MODE_MANUAL:
             self.active_drive_mode = DRIVE_MANUAL
-        elif self.selected_mode == MODE_AUTOMATIC:
+        elif self.selected_mode == MODE_AUTONOMOUS:
             self.ensure_autonomous_driver()
-            self.active_drive_mode = DRIVE_AUTOMATIC
+            self.active_drive_mode = DRIVE_AUTONOMOUS
         elif self.selected_mode == MODE_TAKEOVER:
             self.ensure_autonomous_driver()
             self.takeover_controller = TakeoverController(
                 self.vehicle, self.autonomous_driver, self.wheel
             )
-            self.active_drive_mode = DRIVE_AUTOMATIC
+            self.active_drive_mode = DRIVE_AUTONOMOUS
         self.telemetry = self._create_telemetry()
         self.trial_dir = prepare_trial_dir(self.student_name, self.telemetry.timestamp)
         self.mission_active = True

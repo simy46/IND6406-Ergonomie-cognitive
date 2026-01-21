@@ -1,6 +1,6 @@
 import math
 
-from core.constants import DRIVE_AUTOMATIC, DRIVE_MANUAL
+from core.constants import DRIVE_AUTONOMOUS, DRIVE_MANUAL
 
 
 class TelemetryMetricsMixin:
@@ -27,7 +27,7 @@ class TelemetryMetricsMixin:
         self.speed_time_total += dt
         if active_drive_mode == DRIVE_MANUAL:
             self.manual_time_seconds += dt
-        elif active_drive_mode == DRIVE_AUTOMATIC:
+        elif active_drive_mode == DRIVE_AUTONOMOUS:
             self.auto_time_seconds += dt
         self.route_metrics.update(location, dt)
         if self.takeover_controller is not None:

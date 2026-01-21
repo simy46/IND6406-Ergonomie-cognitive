@@ -2,14 +2,14 @@ from core.constants import (
     CHAIN_ENABLED,
     CHAIN_MIN_SECONDS,
     CHAIN_PREVIEW_DISTANCE_METERS,
-    DRIVE_AUTOMATIC,
+    DRIVE_AUTONOMOUS,
 )
 from core.mission import compute_route, pick_destination_far, reached_destination
 
 
 class MissionManagerRoutesMixin:
     def mission_is_done(self):
-        if self.active_drive_mode == DRIVE_AUTOMATIC and self.autonomous_driver is not None:
+        if self.active_drive_mode == DRIVE_AUTONOMOUS and self.autonomous_driver is not None:
             return self.autonomous_driver.is_done()
         return reached_destination(self.vehicle, self.destination)
 

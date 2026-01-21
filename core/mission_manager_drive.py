@@ -1,7 +1,7 @@
 from core.constants import (
     DRIVE_MANUAL,
-    DRIVE_AUTOMATIC,
-    MODE_AUTOMATIC,
+    DRIVE_AUTONOMOUS,
+    MODE_AUTONOMOUS,
     MODE_TAKEOVER,
 )
 from core.mission import toggle_manual_auto
@@ -32,7 +32,7 @@ class MissionManagerDriveMixin:
                 if self.active_drive_mode != DRIVE_MANUAL:
                     self.active_drive_mode = DRIVE_MANUAL
                     print("[TAKEOVER] Switching to MANUAL (requested)")
-            if self.active_drive_mode == DRIVE_AUTOMATIC:
+            if self.active_drive_mode == DRIVE_AUTONOMOUS:
                 self.takeover_controller.update_auto_only()
             else:
                 if self.takeover_controller.detect_human_input():
@@ -41,12 +41,12 @@ class MissionManagerDriveMixin:
         else:
             if self.active_drive_mode == DRIVE_MANUAL:
                 run_manual_mode(self.context)
-            elif self.active_drive_mode == DRIVE_AUTOMATIC:
+            elif self.active_drive_mode == DRIVE_AUTONOMOUS:
                 self.ensure_autonomous_driver()
                 self.autonomous_driver.run_step()
 
     def _rebuild_autonomy(self):
-        if self.selected_mode == MODE_AUTOMATIC:
+        if self.selected_mode == MODE_AUTONOMOUS:
             self.ensure_autonomous_driver()
         elif self.selected_mode == MODE_TAKEOVER:
             if self.takeover_controller is not None:
