@@ -135,17 +135,31 @@ class MissionManager:
     def run_menu(self, screen, clock):
         if not self.in_menu:
             return True
-        self.student_name, self.selected_mode, traffic_enabled = mission_popup(screen, clock)
+        result = mission_popup(screen, clock)
+        if not result or result[0] is None:
+            return False
+        self.student_name, self.selected_mode, traffic_enabled, nback_config = result
         if not self.student_name:
             return False
         self.start, self.destination = pick_start_and_destination(self.world)
         self.route = compute_route(self.world, self.start.location, self.destination.location)
         self.next_route = None
         self.next_destination = None
+        nback_level = NBACK_LEVEL
+        nback_interval = NBACK_INTERVAL_SECONDS
+        nback_rounds = NBACK_TOTAL_TRIALS
+        if nback_config:
+            nback_level = nback_config.get("level", nback_level)
+            nback_interval = nback_config.get("interval", nback_interval)
+            rounds = nback_config.get("rounds", nback_rounds)
+            if rounds is None:
+                nback_rounds = 10**9
+            else:
+                nback_rounds = rounds
         self.nback_task = SpatialNBackTask(
-            level=NBACK_LEVEL,
-            interval_seconds=NBACK_INTERVAL_SECONDS,
-            total_trials=NBACK_TOTAL_TRIALS,
+            level=nback_level,
+            interval_seconds=nback_interval,
+            total_trials=nback_rounds,
             positions=NBACK_POSITIONS,
         )
         self.reset_vehicle_to_spawn(self.start)
