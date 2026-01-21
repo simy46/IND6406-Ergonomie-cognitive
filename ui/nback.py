@@ -10,7 +10,7 @@ def render_nback(screen, task, elapsed_seconds=None):
     width, height = screen.get_size()
     padding = max(16, int(min(width, height) * 0.03))
     box_size = int(min(width, height) * 0.7)
-    box_size = max(32, min(box_size, 96))
+    box_size = max(36, min(box_size, 112))
     gap = max(10, int(box_size * 0.35))
 
     total_width = (box_size * task.positions) + (gap * (task.positions - 1))
@@ -27,7 +27,7 @@ def render_nback(screen, task, elapsed_seconds=None):
 
     base_color = (30, 30, 32)
     outline = (200, 200, 200)
-    active_fill = (255, 150, 40)
+    active_fill = (255, 120, 20)
     active_outline = (255, 255, 255)
 
     flash_color = None
