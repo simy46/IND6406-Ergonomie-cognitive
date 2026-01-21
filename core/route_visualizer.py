@@ -5,18 +5,43 @@ def draw_route(world, route, life_time=1.1):
     for wp, _ in route:
         start = wp.transform.location + carla.Location(z=0.35)
         forward = wp.transform.get_forward_vector()
+        right = wp.transform.get_right_vector()
         end = start + carla.Location(
-            x=forward.x * 0.8,
-            y=forward.y * 0.8,
-            z=forward.z * 0.2,
+            x=forward.x * 0.6,
+            y=forward.y * 0.6,
+            z=forward.z * 0.1,
         )
-        world.debug.draw_arrow(
+        color = carla.Color(60, 90, 120)
+        world.debug.draw_line(
             start,
             end,
-            thickness=0.04,
-            arrow_size=0.06,
-            color=carla.Color(0, 110, 180),
-            life_time=life_time
+            thickness=0.03,
+            color=color,
+            life_time=life_time,
+        )
+        head_left = end - carla.Location(
+            x=forward.x * 0.12 - right.x * 0.07,
+            y=forward.y * 0.12 - right.y * 0.07,
+            z=0.0,
+        )
+        head_right = end - carla.Location(
+            x=forward.x * 0.12 + right.x * 0.07,
+            y=forward.y * 0.12 + right.y * 0.07,
+            z=0.0,
+        )
+        world.debug.draw_line(
+            end,
+            head_left,
+            thickness=0.03,
+            color=color,
+            life_time=life_time,
+        )
+        world.debug.draw_line(
+            end,
+            head_right,
+            thickness=0.03,
+            color=color,
+            life_time=life_time,
         )
 
 
