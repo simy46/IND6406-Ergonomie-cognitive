@@ -27,7 +27,7 @@ def mission_popup(screen, clock):
     selected_config = 0
     nback_level = int(NBACK_LEVEL)
     nback_interval = float(NBACK_INTERVAL_SECONDS)
-    nback_rounds = int(NBACK_TOTAL_TRIALS)
+    nback_rounds = None
 
     modes = [
         (MODE_MANUAL, "Conduite manuelle"),
@@ -70,11 +70,11 @@ def mission_popup(screen, clock):
                                     "rounds": rounds_value,
                                 },
                             )
-                    elif event.key == pygame.K_LEFT:
+                    elif event.key == pygame.K_UP:
                         selected_config = (selected_config - 1) % 3
-                    elif event.key == pygame.K_RIGHT:
+                    elif event.key == pygame.K_DOWN:
                         selected_config = (selected_config + 1) % 3
-                    elif event.key in (pygame.K_UP, pygame.K_PLUS, pygame.K_KP_PLUS, pygame.K_EQUALS):
+                    elif event.key in (pygame.K_RIGHT, pygame.K_PLUS, pygame.K_KP_PLUS, pygame.K_EQUALS):
                         if selected_config == 0:
                             nback_level += 1
                         elif selected_config == 1:
@@ -84,7 +84,7 @@ def mission_popup(screen, clock):
                                 nback_rounds = 1
                             else:
                                 nback_rounds += 1
-                    elif event.key in (pygame.K_DOWN, pygame.K_MINUS, pygame.K_KP_MINUS):
+                    elif event.key in (pygame.K_LEFT, pygame.K_MINUS, pygame.K_KP_MINUS):
                         if selected_config == 0:
                             nback_level -= 1
                         elif selected_config == 1:
@@ -227,6 +227,12 @@ def mission_popup(screen, clock):
                 font.render("Configuration N-Back", True, (220, 220, 220)),
                 (POP_X + 80, POP_Y + 120)
             )
+            pygame.draw.rect(
+                screen,
+                (40, 40, 40),
+                (POP_X + 60, POP_Y + 165, 500, 180),
+                border_radius=10,
+            )
 
             label_color = (0, 220, 255)
             value_color = (255, 255, 255)
@@ -242,7 +248,7 @@ def mission_popup(screen, clock):
             draw_config_line("Intervalle (s)", f"{nback_interval:.1f}", POP_Y + 235, selected_config == 1)
             draw_config_line("Nombre de tours", rounds_text, POP_Y + 285, selected_config == 2)
 
-            nav_hint = "←/→ sélection | ↑/↓ ajuster"
+            nav_hint = "↑↓ sélection | ←→ ajuster"
             screen.blit(
                 font_small.render(nav_hint, True, (160, 160, 160)),
                 (POP_X + 80, POP_Y + 345)
