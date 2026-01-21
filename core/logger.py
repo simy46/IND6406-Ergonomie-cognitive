@@ -40,19 +40,26 @@ def _sanitize_student_name(name):
 def _get_trial_dir(root_dir, student_name, timestamp):
     student_dir = root_dir / _sanitize_student_name(student_name)
     student_dir.mkdir(parents=True, exist_ok=True)
-    time_part = "00-00"
+    time_part = "00h00"
     if timestamp and " " in timestamp:
-        time_part = timestamp.split(" ", 1)[1].replace(":", "-")
+        time_part = timestamp.split(" ", 1)[1].replace(":", "h")
     max_index = -1
-    for path in student_dir.glob("trial_*_*"):
-        parts = path.name.split("_", 2)
-        if len(parts) >= 2:
-            try:
-                max_index = max(max_index, int(parts[1]))
-            except ValueError:
-                continue
+    for path in student_dir.glob("trial*_*"):
+        name = path.name
+        if not name.startswith("trial"):
+            continue
+        parts = name.split("_", 1)
+        if not parts:
+            continue
+        index_part = parts[0].replace("trial", "")
+        try:
+            max_index = max(max_index, int(index_part))
+        except ValueError:
+            continue
     next_index = max_index + 1
-    trial_dir = student_dir / f"trial_{next_index}_{time_part}"
+    if next_index <= 0:
+        next_index = 1
+    trial_dir = student_dir / f"trial{next_index}_{time_part}"
     trial_dir.mkdir(parents=True, exist_ok=True)
     return trial_dir
 
