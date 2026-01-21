@@ -20,6 +20,13 @@ FIELDNAMES = [
     "mode_switch_count",
     "takeover_requested",
     "takeover_reaction_time_seconds",
+    "nback_level",
+    "nback_total_trials",
+    "nback_targets_count",
+    "nback_hits",
+    "nback_misses",
+    "nback_false_alarms",
+    "nback_correct_rejections",
 ]
 
 

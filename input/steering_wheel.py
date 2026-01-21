@@ -5,6 +5,7 @@ import carla
 class SteeringWheel:
     def __init__(self, debug=True):
         self.debug = debug
+        self._prev_buttons = {}
 
         pygame.joystick.init()
         count = pygame.joystick.get_count()
@@ -63,3 +64,9 @@ class SteeringWheel:
             )
 
         return control
+
+    def was_button_pressed(self, button_index):
+        current = bool(self.joy.get_button(button_index))
+        previous = self._prev_buttons.get(button_index, False)
+        self._prev_buttons[button_index] = current
+        return current and not previous

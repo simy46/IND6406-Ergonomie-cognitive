@@ -20,7 +20,12 @@ from core.constants import (
     CHAIN_ENABLED,
     CHAIN_MIN_SECONDS,
     CHAIN_PREVIEW_DISTANCE_METERS,
+    NBACK_LEVEL,
+    NBACK_INTERVAL_SECONDS,
+    NBACK_TOTAL_TRIALS,
+    NBACK_POSITIONS,
 )
+from core.nback import SpatialNBackTask
 from core.traffic import TrafficController
 from core.telemetry import Telemetry
 from core.logger import append_row
@@ -50,6 +55,7 @@ class MissionManager:
         self.next_destination = None
         self.last_debug_draw = 0.0
         self.telemetry = None
+        self.nback_task = None
         self.traffic_controller = TrafficController(
             client,
             world,
@@ -110,6 +116,7 @@ class MissionManager:
         self.last_debug_draw = 0.0
         self.next_route = None
         self.next_destination = None
+        self.nback_task = None
         self.traffic_controller.destroy_all()
         if self.telemetry is not None:
             self.telemetry.cleanup()
@@ -135,6 +142,12 @@ class MissionManager:
         self.route = compute_route(self.world, self.start.location, self.destination.location)
         self.next_route = None
         self.next_destination = None
+        self.nback_task = SpatialNBackTask(
+            level=NBACK_LEVEL,
+            interval_seconds=NBACK_INTERVAL_SECONDS,
+            total_trials=NBACK_TOTAL_TRIALS,
+            positions=NBACK_POSITIONS,
+        )
         self.reset_vehicle_to_spawn(self.start)
         avoid_locations = [wp.transform.location for wp, _ in self.route]
         avoid_road_ids = None
@@ -165,6 +178,7 @@ class MissionManager:
             self.route,
             self.destination,
             self.takeover_controller,
+            self.nback_task,
         )
         self.mission_active = True
         self.in_menu = False
@@ -215,9 +229,9 @@ class MissionManager:
                 self.ensure_autonomous_driver()
                 self.autonomous_driver.run_step()
 
-    def update_telemetry(self, dt):
+    def update_telemetry(self, dt, nback_click=False):
         if self.mission_active and self.telemetry is not None:
-            self.telemetry.update(self.active_drive_mode, dt)
+            self.telemetry.update(self.active_drive_mode, dt, nback_click=nback_click)
 
     def should_draw_debug(self, now):
         if self.mission_active and (now - self.last_debug_draw) > 1.0:

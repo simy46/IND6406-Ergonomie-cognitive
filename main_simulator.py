@@ -12,7 +12,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, r"D:\CARLA\PythonAPI\carla")
 
 from core.mission import pick_start_and_destination
-from core.constants import CHAIN_ENABLED, CHAIN_MIN_SECONDS
+from core.constants import CHAIN_ENABLED, CHAIN_MIN_SECONDS, NBACK_RESPONSE_BUTTON
 from core.mission_manager import MissionManager
 from core.route_visualizer import draw_route, draw_destination
 from core.camera import CameraRGB
@@ -20,6 +20,7 @@ from core.pause import PauseController
 from input.steering_wheel import SteeringWheel
 from ui.hud import draw_center_message, render_hud
 from ui.pause import render_pause_screen
+from ui.nback import render_nback
 
 
 def cleanup_world_actors(world):
@@ -171,7 +172,13 @@ def main():
             # RUN MODE
             # =========================
             mission_manager.run_mission_mode()
-            mission_manager.update_telemetry(dt)
+            nback_click = False
+            if mission_manager.mission_active:
+                try:
+                    nback_click = wheel.was_button_pressed(NBACK_RESPONSE_BUTTON)
+                except Exception:
+                    nback_click = False
+            mission_manager.update_telemetry(dt, nback_click=nback_click)
             mission_manager.prepare_next_route()
 
             # =========================
@@ -210,6 +217,12 @@ def main():
                 mission_manager.active_drive_mode,
                 hud_visible=hud_visible,
             )
+            if mission_manager.mission_active and mission_manager.telemetry is not None:
+                render_nback(
+                    screen,
+                    mission_manager.nback_task,
+                    mission_manager.telemetry.get_mission_elapsed_seconds(),
+                )
 
             if mission_manager.show_restart_prompt:
                 hud_visible = True

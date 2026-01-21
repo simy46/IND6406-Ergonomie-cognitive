@@ -4,7 +4,7 @@ from datetime import datetime
 
 import carla
 
-from core.constants import DRIVE_AUTOMATIC, DRIVE_MANUAL
+from core.constants import DRIVE_AUTOMATIC, DRIVE_MANUAL, NBACK_LEVEL
 from core.route_metrics import RouteMetrics
 
 
@@ -18,6 +18,7 @@ class Telemetry:
         route,
         destination,
         takeover_controller=None,
+        nback_task=None,
     ):
         self.world = world
         self.vehicle = vehicle
@@ -48,6 +49,7 @@ class Telemetry:
         self.paused = False
         self.pause_started = None
         self.paused_total_seconds = 0.0
+        self.nback_task = nback_task
         self._setup_sensors()
 
     def _get_elapsed_seconds(self, now=None):
@@ -94,8 +96,12 @@ class Telemetry:
         if intensity > self.collision_max_intensity:
             self.collision_max_intensity = intensity
 
-    def update(self, active_drive_mode, dt):
-        if self.paused or dt <= 0:
+    def update(self, active_drive_mode, dt, nback_click=False):
+        if self.paused:
+            return
+        if self.nback_task is not None:
+            self.nback_task.update(self._get_elapsed_seconds(), nback_click)
+        if dt <= 0:
             return
         location = self.vehicle.get_location()
         if self.prev_location is not None:
@@ -166,6 +172,8 @@ class Telemetry:
         self.mode_switch_count += 1
 
     def finalize(self):
+        if self.nback_task is not None:
+            self.nback_task.stop(self._get_elapsed_seconds())
         mission_duration_seconds = self._get_elapsed_seconds()
         average_speed_kmh = 0.0
         if self.speed_time_total > 0:
@@ -180,7 +188,7 @@ class Telemetry:
                 reaction = self.takeover_controller.get_reaction_time()
             if reaction is not None:
                 takeover_reaction_value = round(reaction, 2)
-        return {
+        metrics = {
             "timestamp": self.timestamp,
             "student_name": self.student_name,
             "selected_mode": self.selected_mode,
@@ -199,6 +207,21 @@ class Telemetry:
             "takeover_requested": takeover_requested_value,
             "takeover_reaction_time_seconds": takeover_reaction_value,
         }
+        if self.nback_task is not None:
+            metrics.update(self.nback_task.get_metrics())
+        else:
+            metrics.update(
+                {
+                    "nback_level": NBACK_LEVEL,
+                    "nback_total_trials": 0,
+                    "nback_targets_count": 0,
+                    "nback_hits": 0,
+                    "nback_misses": 0,
+                    "nback_false_alarms": 0,
+                    "nback_correct_rejections": 0,
+                }
+            )
+        return metrics
 
     def cleanup(self):
         if self.lane_invasion_sensor is not None:
