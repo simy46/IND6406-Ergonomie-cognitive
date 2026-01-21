@@ -44,12 +44,15 @@ def reached_destination(vehicle, destination, threshold=5.0):
 
 
 from core.constants import DRIVE_AUTONOMOUS, DRIVE_MANUAL
+from core.mode_audio import play_enabled, play_disabled
 
 
 def toggle_manual_auto(active_drive_mode, ensure_autonomous_driver, takeover_controller):
     if active_drive_mode == DRIVE_AUTONOMOUS:
         if takeover_controller:
             takeover_controller.play_noa_disabled()
+        else:
+            play_disabled()
 
         active_drive_mode = DRIVE_MANUAL
         print("[MODE] Switched to MANUAL")
@@ -61,6 +64,8 @@ def toggle_manual_auto(active_drive_mode, ensure_autonomous_driver, takeover_con
         ensure_autonomous_driver()
         if takeover_controller:
             takeover_controller.play_noa_enabled()
+        else:
+            play_enabled()
 
         active_drive_mode = DRIVE_AUTONOMOUS
         print("[MODE] Switched to AUTO")
