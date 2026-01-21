@@ -3,61 +3,18 @@ from pathlib import Path
 import time
 import pygame
 import carla
-
-# =========================
-# PATHS
-# =========================
 PROJECT_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, r"D:\CARLA\PythonAPI\carla")
 
-from core.mission import pick_start_and_destination
-from core.constants import CHAIN_ENABLED, CHAIN_MIN_SECONDS, NBACK_RESPONSE_BUTTON
-from core.mission_manager import MissionManager
-from core.route_visualizer import draw_route, draw_destination
-from core.camera import CameraRGB
-from core.pause import PauseController
-from input.steering_wheel import SteeringWheel
-from ui.hud import draw_center_message, render_hud
+from core.sim_cleanup import cleanup_simulation
+from core.sim_debug import maybe_draw_debug
+from core.sim_events import process_events
+from core.sim_render import render_frame
+from core.sim_setup import setup_world, spawn_vehicle, setup_runtime
+from core.sim_step import run_mission_step
+from core.sim_utils import cleanup_world_actors
 from ui.pause import render_pause_screen
-from ui.nback import render_nback
-
-
-def cleanup_world_actors(world):
-    for pattern in ("vehicle.*", "walker.pedestrian.*", "controller.ai.walker", "sensor.*"):
-        for actor in world.get_actors().filter(pattern):
-            try:
-                actor.destroy()
-            except Exception:
-                pass
-
-
-def safe_destroy(actor):
-    if actor is None:
-        return
-    try:
-        actor.destroy()
-    except Exception:
-        pass
-
-
-def connect_world(client, attempts=5, delay=2.0, do_reload=True):
-    last_err = None
-    for attempt in range(1, attempts + 1):
-        try:
-            world = client.get_world()
-            if do_reload:
-                try:
-                    world = client.reload_world()
-                except RuntimeError as e:
-                    print(f"[WARN] reload_world failed: {e}")
-                    world = client.get_world()
-            return world
-        except RuntimeError as e:
-            last_err = e
-            print(f"[WARN] connect attempt {attempt}/{attempts} failed: {e}")
-            time.sleep(delay)
-    raise last_err
 
 
 def main():
@@ -67,53 +24,15 @@ def main():
     camera = None
     vehicle = None
     mission_manager = None
-
-    # =========================
-    # CARLA CONNECT
-    # =========================
     client = carla.Client("127.0.0.1", 2000)
     client.set_timeout(10.0)
-    # Retry connection in case the simulator is still booting.
-    world = connect_world(client, attempts=6, delay=2.0, do_reload=True)
-    original_settings = world.get_settings()
-    sync_enabled = True
-    traffic_manager = None
-    if sync_enabled:
-        settings = world.get_settings()
-        settings.synchronous_mode = True
-        settings.fixed_delta_seconds = 1.0 / 60.0
-        world.apply_settings(settings)
-        traffic_manager = client.get_trafficmanager()
-        traffic_manager.set_synchronous_mode(True)
-
-    # =========================
-    # CLEANUP ACTORS (RESET STATE)
-    # =========================
+    world, original_settings, sync_enabled, traffic_manager = setup_world(client, sync_enabled=True)
     cleanup_world_actors(world)
-
-    # =========================
-    # SPAWN VEHICLE (ONCE)
-    # =========================
-    blueprint = world.get_blueprint_library().find("vehicle.tesla.model3")
-    vehicle = world.spawn_actor(blueprint, pick_start_and_destination(world)[0])
-    vehicle.apply_control(carla.VehicleControl())
-    time.sleep(0.5)
-
-    # =========================
-    # CAMERA + INPUT
-    # =========================
-    camera = CameraRGB(world, vehicle)
-    wheel = SteeringWheel(debug=True)
-    mission_manager = MissionManager(client, world, vehicle, wheel)
-    pause_controller = PauseController(vehicle)
-
+    vehicle = spawn_vehicle(world)
+    camera, wheel, mission_manager, pause_controller = setup_runtime(client, world, vehicle)
     clock = pygame.time.Clock()
     running = True
     hud_visible = False
-
-    # =========================
-    # MAIN LOOP
-    # =========================
     try:
         while running:
             now = time.time()
@@ -122,39 +41,15 @@ def main():
             if pause_controller.telemetry is not mission_manager.telemetry:
                 pause_controller.set_telemetry(mission_manager.telemetry)
 
-            # -------------------------
-            # EVENTS
-            # -------------------------
-            pause_clicks = []
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
+            events = pygame.event.get()
+            running, hud_visible, pause_clicks = process_events(
+                events,
+                mission_manager,
+                pause_controller,
+                camera,
+                hud_visible,
+            )
 
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        if mission_manager.mission_active:
-                            pause_controller.toggle()
-                        continue
-                    if event.key == pygame.K_p:
-                        if mission_manager.mission_active and not pause_controller.paused:
-                            mission_manager.handle_escape()
-                        continue
-                    if event.key in (pygame.K_LCTRL, pygame.K_RCTRL):
-                        hud_visible = not hud_visible
-                        continue
-                    if pause_controller.paused:
-                        continue
-                    if event.key == pygame.K_TAB:
-                        camera.toggle()
-
-                    elif mission_manager.show_restart_prompt and event.key == pygame.K_SPACE:
-                        mission_manager.reset_state_to_menu()
-                elif pause_controller.paused and event.type == pygame.MOUSEBUTTONDOWN:
-                    pause_clicks.append(event.pos)
-
-            # =========================
-            # MISSION POPUP
-            # =========================
             if mission_manager.in_menu:
                 if not mission_manager.run_menu(screen, clock):
                     break
@@ -176,98 +71,30 @@ def main():
                 pygame.display.flip()
                 continue
 
-            # =========================
-            # RUN MODE
-            # =========================
-            mission_manager.run_mission_mode()
-            nback_click = False
-            if mission_manager.mission_active:
-                try:
-                    nback_click = wheel.was_button_pressed(NBACK_RESPONSE_BUTTON)
-                except Exception:
-                    nback_click = False
-            mission_manager.update_telemetry(dt, nback_click=nback_click)
-            mission_manager.prepare_next_route()
+            run_mission_step(mission_manager, wheel, dt)
 
-            # =========================
-            # DEBUG DRAW (1 Hz)
-            # =========================
-            if mission_manager.should_draw_debug(now):
-                draw_route(world, mission_manager.route)
-                draw_destination_marker = True
-                draw_next_route = False
-                if CHAIN_ENABLED and mission_manager.telemetry is not None:
-                    elapsed = mission_manager.telemetry.get_mission_elapsed_seconds()
-                    if elapsed < CHAIN_MIN_SECONDS:
-                        draw_next_route = mission_manager.next_route is not None
-                        draw_destination_marker = not draw_next_route
-                    else:
-                        draw_next_route = False
-                        draw_destination_marker = True
-                if draw_next_route and mission_manager.next_route is not None:
-                    draw_route(world, mission_manager.next_route)
-                if draw_destination_marker:
-                    draw_destination(world, mission_manager.destination.location)
-
-            # =========================
-            # MISSION END CHECK
-            # =========================
+            maybe_draw_debug(world, mission_manager, now)
             mission_manager.check_end()
-
-            # =========================
-            # RENDER
-            # =========================
-            screen.fill((0, 0, 0))
-            camera.render(screen)
-            render_hud(
+            hud_visible = render_frame(
                 screen,
-                mission_manager.telemetry,
-                mission_manager.active_drive_mode,
-                hud_visible=hud_visible,
+                camera,
+                mission_manager,
+                hud_visible,
             )
-            if mission_manager.mission_active:
-                elapsed = None
-                if mission_manager.telemetry is not None:
-                    elapsed = mission_manager.telemetry.get_mission_elapsed_seconds()
-                render_nback(screen, mission_manager.nback_task, elapsed)
-
-            if mission_manager.show_restart_prompt:
-                hud_visible = True
-                draw_center_message(
-                    screen,
-                    "Mission terminée: Appuyez sur [ESPACE]",
-                    color=(0, 220, 255),
-                )
-
             pygame.display.flip()
 
     finally:
-        # =========================
-        # CLEAN EXIT
-        # =========================
-        try:
-            if mission_manager is not None:
-                mission_manager.traffic_controller.destroy_all()
-                if mission_manager.telemetry is not None:
-                    mission_manager.telemetry.cleanup()
-        except Exception:
-            pass
-        safe_destroy(camera)
-        safe_destroy(vehicle)
-        cleanup_world_actors(world)
-        if sync_enabled:
-            try:
-                world.apply_settings(original_settings)
-            except Exception:
-                pass
-        if traffic_manager is not None:
-            try:
-                traffic_manager.set_synchronous_mode(False)
-            except Exception:
-                pass
+        cleanup_simulation(
+            mission_manager,
+            camera,
+            vehicle,
+            world,
+            sync_enabled,
+            original_settings,
+            traffic_manager,
+        )
         pygame.quit()
         print("Exited cleanly")
-
 
 if __name__ == "__main__":
     main()

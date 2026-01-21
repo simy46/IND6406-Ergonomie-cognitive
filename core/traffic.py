@@ -1,5 +1,8 @@
 import random
+
 import carla
+
+from core.traffic_spawn import spawn_vehicles, spawn_walkers
 
 
 class TrafficController:
@@ -39,7 +42,6 @@ class TrafficController:
 
     def _spawn_traffic(self, reference_location=None, avoid_locations=None, avoid_road_ids=None):
         self.destroy_all()
-        blueprint_library = self.world.get_blueprint_library()
         spawn_points = self.world.get_map().get_spawn_points()
         if reference_location is not None:
             spawn_points = [
@@ -80,85 +82,18 @@ class TrafficController:
         traffic_manager.set_synchronous_mode(sync_enabled)
         traffic_manager.set_global_distance_to_leading_vehicle(3.0)
 
-        vehicle_bps = blueprint_library.filter("vehicle.*")
-        vehicle_count = min(self.vehicle_count, len(spawn_points))
-        batch = []
-        for spawn_point in spawn_points[:vehicle_count]:
-            bp = random.choice(vehicle_bps)
-            if bp.has_attribute("color"):
-                color = random.choice(bp.get_attribute("color").recommended_values)
-                bp.set_attribute("color", color)
-            batch.append(
-                carla.command.SpawnActor(bp, spawn_point).then(
-                    carla.command.SetAutopilot(
-                        carla.command.FutureActor, True, traffic_manager.get_port()
-                    )
-                )
-            )
-        try:
-            results = self.client.apply_batch_sync(batch, True)
-        except Exception as e:
-            print(f"[TRAFFIC][ERROR] Vehicle spawn batch failed: {e}")
-            return
-        for result in results:
-            if result.error:
-                print(f"[TRAFFIC][WARN] Vehicle spawn failed: {result.error}")
-                continue
-            actor = self.world.get_actor(result.actor_id)
-            if actor is not None:
-                try:
-                    traffic_manager.auto_lane_change(actor, False)
-                    traffic_manager.vehicle_percentage_speed_difference(actor, 10)
-                except Exception:
-                    pass
-                self.actors.append(actor)
-        if self.vehicle_count > 0:
-            print(f"[TRAFFIC] Vehicles spawned: {len(self.actors)}/{self.vehicle_count}")
+        actors = spawn_vehicles(
+            self.client,
+            self.world,
+            traffic_manager,
+            spawn_points,
+            self.vehicle_count,
+        )
+        self.actors.extend(actors)
         if sync_enabled:
             self.world.tick()
 
-        walker_bps = blueprint_library.filter("walker.pedestrian.*")
-        walker_controller_bp = blueprint_library.find("controller.ai.walker")
-        walker_transforms = []
-        for _ in range(self.walker_count):
-            location = self.world.get_random_location_from_navigation()
-            if location:
-                walker_transforms.append(carla.Transform(location))
-
-        walker_batch = []
-        for transform in walker_transforms:
-            bp = random.choice(walker_bps)
-            walker_batch.append(carla.command.SpawnActor(bp, transform))
-        try:
-            walker_results = self.client.apply_batch_sync(walker_batch, True)
-        except Exception as e:
-            print(f"[TRAFFIC][ERROR] Walker spawn batch failed: {e}")
-            return
-        walker_ids = [r.actor_id for r in walker_results if not r.error]
-
-        controller_batch = []
-        for walker_id in walker_ids:
-            controller_batch.append(
-                carla.command.SpawnActor(walker_controller_bp, carla.Transform(), walker_id)
-            )
-        try:
-            controller_results = self.client.apply_batch_sync(controller_batch, True)
-        except Exception as e:
-            print(f"[TRAFFIC][ERROR] Walker controller spawn failed: {e}")
-            return
-        controller_ids = [r.actor_id for r in controller_results if not r.error]
-
-        for controller_id, walker_id in zip(controller_ids, walker_ids):
-            controller = self.world.get_actor(controller_id)
-            walker = self.world.get_actor(walker_id)
-            if controller is None or walker is None:
-                continue
-            controller.start()
-            controller.go_to_location(self.world.get_random_location_from_navigation())
-            controller.set_max_speed(1.4)
-            self.actors.append(controller)
-            self.actors.append(walker)
-        if self.walker_count > 0:
-            print(f"[TRAFFIC] Walkers spawned: {len(walker_ids)}/{self.walker_count}")
+        actors = spawn_walkers(self.client, self.world, self.walker_count)
+        self.actors.extend(actors)
         if sync_enabled:
             self.world.tick()

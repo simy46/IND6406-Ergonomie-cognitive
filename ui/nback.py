@@ -1,5 +1,7 @@
 import pygame
 
+from core.constants import NBACK_STIMULUS_OFF_GAP_SECONDS
+
 
 def render_nback(screen, task, elapsed_seconds=None):
     if task is None or task.completed or task.current_position is None:
@@ -7,7 +9,7 @@ def render_nback(screen, task, elapsed_seconds=None):
 
     width, height = screen.get_size()
     padding = max(16, int(min(width, height) * 0.03))
-    box_size = int(min(width, height) * 0.06)
+    box_size = int(min(width, height) * 0.078)
     box_size = max(28, min(box_size, 64))
     gap = max(10, int(box_size * 0.35))
 
@@ -30,6 +32,11 @@ def render_nback(screen, task, elapsed_seconds=None):
     if elapsed_seconds is not None and task.last_response_time is not None:
         if (elapsed_seconds - task.last_response_time) <= 0.25:
             flash_color = (0, 200, 120) if task.last_response_was_target else (220, 80, 80)
+
+    if elapsed_seconds is not None and task.current_start_time is not None:
+        on_duration = max(0.0, task.interval_seconds - NBACK_STIMULUS_OFF_GAP_SECONDS)
+        if (elapsed_seconds - task.current_start_time) >= on_duration:
+            return
 
     pulse_alpha = 0
     if elapsed_seconds is not None and task.current_start_time is not None:
