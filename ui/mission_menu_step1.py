@@ -9,6 +9,7 @@ def draw_step_name_mode(
     modes,
     selected_mode,
     traffic_enabled,
+    nback_enabled,
 ):
     pop_x, pop_y = popup_rect.x, popup_rect.y
     screen.blit(
@@ -60,6 +61,26 @@ def draw_step_name_mode(
     screen.blit(
         fonts["main"].render(traffic_label, True, (220, 220, 220)),
         (checkbox_x + 36, checkbox_y - 2),
+    )
+    nback_box_y = checkbox_y + 40
+    pygame.draw.rect(
+        screen,
+        (255, 255, 255),
+        (checkbox_x, nback_box_y, checkbox_size, checkbox_size),
+        2,
+        border_radius=4,
+    )
+    if nback_enabled:
+        pygame.draw.rect(
+            screen,
+            (0, 180, 220),
+            (checkbox_x + 4, nback_box_y + 4, checkbox_size - 8, checkbox_size - 8),
+            border_radius=3,
+        )
+    nback_label = "Activer N-Back"
+    screen.blit(
+        fonts["main"].render(nback_label, True, (220, 220, 220)),
+        (checkbox_x + 36, nback_box_y - 2),
     )
     hint_surface = fonts["small"].render("ENTRÉE pour continuer", True, (180, 180, 180))
     hint_rect = hint_surface.get_rect(

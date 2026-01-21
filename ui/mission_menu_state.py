@@ -14,6 +14,7 @@ def init_state():
         "name": "",
         "selected_mode": None,
         "traffic_enabled": True,
+        "nback_enabled": True,
         "screen_step": 1,
         "selected_config": 0,
         "nback_level": int(NBACK_LEVEL),

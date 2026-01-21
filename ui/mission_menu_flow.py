@@ -19,12 +19,13 @@ def mission_popup(screen, clock):
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return None, None, None, None
+                return None, None, None, None, None
             if state["screen_step"] == 1:
                 (
                     state["name"],
                     state["selected_mode"],
                     state["traffic_enabled"],
+                    state["nback_enabled"],
                     go_next,
                     exit_app,
                 ) = handle_step1_event(
@@ -34,11 +35,21 @@ def mission_popup(screen, clock):
                     state["name"],
                     state["selected_mode"],
                     state["traffic_enabled"],
+                    state["nback_enabled"],
                 )
                 if exit_app:
-                    return None, None, None, None
-                if go_next and state["name"].strip():
-                    state["screen_step"] = 2
+                    return None, None, None, None, None
+                if go_next and state["name"].strip() and state["selected_mode"]:
+                    if state["nback_enabled"]:
+                        state["screen_step"] = 2
+                    else:
+                        return (
+                            state["name"].strip(),
+                            state["selected_mode"],
+                            state["traffic_enabled"],
+                            None,
+                            False,
+                        )
             else:
                 (
                     state["selected_config"],
@@ -69,6 +80,7 @@ def mission_popup(screen, clock):
                             "interval": state["nback_interval"],
                             "rounds": rounds_value,
                         },
+                        True,
                     )
 
         draw_overlay(screen, width, height)
@@ -83,6 +95,7 @@ def mission_popup(screen, clock):
                 modes,
                 state["selected_mode"],
                 state["traffic_enabled"],
+                state["nback_enabled"],
             )
         else:
             draw_step_nback_config(

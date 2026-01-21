@@ -1,7 +1,15 @@
 import pygame
 
 
-def handle_step1_event(event, popup_rect, modes, name, selected_mode, traffic_enabled):
+def handle_step1_event(
+    event,
+    popup_rect,
+    modes,
+    name,
+    selected_mode,
+    traffic_enabled,
+    nback_enabled,
+):
     go_next = False
     exit_app = False
     if event.type == pygame.KEYDOWN:
@@ -30,7 +38,14 @@ def handle_step1_event(event, popup_rect, modes, name, selected_mode, traffic_en
             and checkbox_y <= my <= checkbox_y + checkbox_size
         ):
             traffic_enabled = not traffic_enabled
-    return name, selected_mode, traffic_enabled, go_next, exit_app
+        nback_box_x = popup_rect.x + 80
+        nback_box_y = checkbox_y + 40
+        if (
+            nback_box_x <= mx <= nback_box_x + checkbox_size
+            and nback_box_y <= my <= nback_box_y + checkbox_size
+        ):
+            nback_enabled = not nback_enabled
+    return name, selected_mode, traffic_enabled, nback_enabled, go_next, exit_app
 
 
 def handle_step2_event(event, selected_config, nback_level, nback_interval, nback_rounds):

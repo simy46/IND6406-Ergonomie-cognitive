@@ -24,30 +24,32 @@ class MissionManagerMenuMixin:
         result = mission_popup(screen, clock)
         if not result or result[0] is None:
             return False
-        self.student_name, self.selected_mode, traffic_enabled, nback_config = result
+        self.student_name, self.selected_mode, traffic_enabled, nback_config, nback_enabled = result
         if not self.student_name:
             return False
         self.start, self.destination = pick_start_and_destination(self.world)
         self.route = compute_route(self.world, self.start.location, self.destination.location)
         self.next_route = None
         self.next_destination = None
-        nback_level = NBACK_LEVEL
-        nback_interval = NBACK_INTERVAL_SECONDS
-        nback_rounds = NBACK_TOTAL_TRIALS
-        if nback_config:
-            nback_level = nback_config.get("level", nback_level)
-            nback_interval = nback_config.get("interval", nback_interval)
-            rounds = nback_config.get("rounds", nback_rounds)
-            if rounds is None:
-                nback_rounds = 10**9
-            else:
-                nback_rounds = rounds
-        self.nback_task = SpatialNBackTask(
-            level=nback_level,
-            interval_seconds=nback_interval,
-            total_trials=nback_rounds,
-            positions=NBACK_POSITIONS,
-        )
+        self.nback_task = None
+        if nback_enabled:
+            nback_level = NBACK_LEVEL
+            nback_interval = NBACK_INTERVAL_SECONDS
+            nback_rounds = NBACK_TOTAL_TRIALS
+            if nback_config:
+                nback_level = nback_config.get("level", nback_level)
+                nback_interval = nback_config.get("interval", nback_interval)
+                rounds = nback_config.get("rounds", nback_rounds)
+                if rounds is None:
+                    nback_rounds = 10**9
+                else:
+                    nback_rounds = rounds
+            self.nback_task = SpatialNBackTask(
+                level=nback_level,
+                interval_seconds=nback_interval,
+                total_trials=nback_rounds,
+                positions=NBACK_POSITIONS,
+            )
         self.reset_vehicle_to_spawn(self.start)
         avoid_locations = [wp.transform.location for wp, _ in self.route]
         avoid_road_ids = None
