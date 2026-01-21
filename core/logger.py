@@ -64,6 +64,14 @@ def _get_trial_dir(root_dir, student_name, timestamp):
     return trial_dir
 
 
+def prepare_trial_dir(student_name, timestamp, root_dir=None):
+    if root_dir is None:
+        root_dir = Path(__file__).resolve().parent.parent / "data"
+    else:
+        root_dir = Path(root_dir)
+    return _get_trial_dir(root_dir, student_name, timestamp)
+
+
 def _write_csv(path, fieldnames, row):
     with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -72,16 +80,17 @@ def _write_csv(path, fieldnames, row):
 
 
 def append_row(metrics, csv_path=None):
-    if csv_path is None:
-        root_dir = Path(__file__).resolve().parent.parent / "data"
-    else:
-        root_dir = Path(csv_path)
     try:
-        trial_dir = _get_trial_dir(
-            root_dir,
-            metrics.get("student_name", "unknown"),
-            metrics.get("timestamp", ""),
-        )
+        if csv_path is not None:
+            trial_dir = Path(csv_path)
+            trial_dir.mkdir(parents=True, exist_ok=True)
+        else:
+            root_dir = Path(__file__).resolve().parent.parent / "data"
+            trial_dir = _get_trial_dir(
+                root_dir,
+                metrics.get("student_name", "unknown"),
+                metrics.get("timestamp", ""),
+            )
         mission_stats = {k: metrics.get(k) for k in MISSION_FIELDNAMES}
         nback_stats = {k: metrics.get(k) for k in NBACK_FIELDNAMES}
         _write_csv(trial_dir / "mission_stats.csv", MISSION_FIELDNAMES, mission_stats)

@@ -33,6 +33,7 @@ class MissionManagerBase:
         self.last_debug_draw = 0.0
         self.telemetry = None
         self.nback_task = None
+        self.trial_dir = None
         self.traffic_controller = TrafficController(
             client,
             world,
@@ -63,7 +64,7 @@ class MissionManagerBase:
             from core.logger import append_row
 
             metrics = self.telemetry.finalize()
-            append_row(metrics)
+            append_row(metrics, csv_path=self.trial_dir)
             self.telemetry.cleanup()
             self.telemetry.pause()
             self.telemetry = None
@@ -78,6 +79,7 @@ class MissionManagerBase:
         self.next_route = None
         self.next_destination = None
         self.nback_task = None
+        self.trial_dir = None
         self.traffic_controller.destroy_all()
         if self.telemetry is not None:
             self.telemetry.cleanup()
@@ -100,7 +102,7 @@ class MissionManagerBase:
             from core.logger import append_row
 
             metrics = self.telemetry.finalize()
-            append_row(metrics)
+            append_row(metrics, csv_path=self.trial_dir)
             self.telemetry.cleanup()
             self.telemetry.pause()
             self.telemetry = None

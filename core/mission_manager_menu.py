@@ -12,6 +12,7 @@ from core.constants import (
 )
 from core.mission import pick_start_and_destination, compute_route
 from core.nback import SpatialNBackTask
+from core.logger import prepare_trial_dir
 from scenarios.scenario_autonomous import AutonomousDriver
 from scenarios.scenario_takeover import TakeoverController
 from ui.mission_menu import mission_popup
@@ -75,6 +76,7 @@ class MissionManagerMenuMixin:
             )
             self.active_drive_mode = DRIVE_AUTOMATIC
         self.telemetry = self._create_telemetry()
+        self.trial_dir = prepare_trial_dir(self.student_name, self.telemetry.timestamp)
         self.mission_active = True
         self.in_menu = False
         self.show_restart_prompt = False

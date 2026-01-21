@@ -14,6 +14,8 @@ from core.sim_render import render_frame
 from core.sim_setup import setup_world, spawn_vehicle, setup_runtime
 from core.sim_step import run_mission_step
 from core.sim_utils import cleanup_world_actors
+from core.recorder import ScreenRecorder
+from core.constants import RECORDING_FPS
 from ui.pause import render_pause_screen
 
 
@@ -24,6 +26,8 @@ def main():
     camera = None
     vehicle = None
     mission_manager = None
+    recorder = None
+    recording_active = False
     client = carla.Client("127.0.0.1", 2000)
     client.set_timeout(10.0)
     world, original_settings, sync_enabled, traffic_manager = setup_world(client, sync_enabled=True)
@@ -44,6 +48,16 @@ def main():
             if mission_manager.in_menu:
                 if not mission_manager.run_menu(screen, clock):
                     break
+                if mission_manager.mission_active and not recording_active:
+                    if mission_manager.trial_dir is not None:
+                        width, height = screen.get_size()
+                        recorder = ScreenRecorder(
+                            mission_manager.trial_dir / "recording.mp4",
+                            width,
+                            height,
+                            fps=RECORDING_FPS,
+                        )
+                        recording_active = recorder.start()
 
             events = pygame.event.get()
             running, hud_visible, pause_clicks = process_events(
@@ -68,6 +82,9 @@ def main():
                     if pause_button_rect and pause_button_rect.collidepoint(pos):
                         pause_controller.resume()
                         mission_manager.reset_state_to_menu()
+                if recording_active and not mission_manager.mission_active:
+                    recorder.stop()
+                    recording_active = False
                 pygame.display.flip()
                 continue
 
@@ -75,15 +92,22 @@ def main():
 
             maybe_draw_debug(world, mission_manager, now)
             mission_manager.check_end()
+            if recording_active and not mission_manager.mission_active:
+                recorder.stop()
+                recording_active = False
             hud_visible = render_frame(
                 screen,
                 camera,
                 mission_manager,
                 hud_visible,
             )
+            if recording_active and recorder is not None:
+                recorder.write_frame(screen)
             pygame.display.flip()
 
     finally:
+        if recording_active and recorder is not None:
+            recorder.stop()
         cleanup_simulation(
             mission_manager,
             camera,

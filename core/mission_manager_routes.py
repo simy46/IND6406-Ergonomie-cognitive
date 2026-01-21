@@ -77,7 +77,7 @@ class MissionManagerRoutesMixin:
                 metrics = self.telemetry.finalize()
                 from core.logger import append_row
 
-                append_row(metrics)
+                append_row(metrics, csv_path=self.trial_dir)
                 self.telemetry.cleanup()
                 self.telemetry.pause()
             print(f"[MISSION] Completed by {self.student_name}")
