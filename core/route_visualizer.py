@@ -13,9 +13,9 @@ def draw_route(world, route, life_time=1.1):
         world.debug.draw_arrow(
             start,
             end,
-            thickness=0.05,
-            arrow_size=0.08,
-            color=carla.Color(0, 150, 255),
+            thickness=0.04,
+            arrow_size=0.06,
+            color=carla.Color(0, 110, 180),
             life_time=life_time
         )
 
