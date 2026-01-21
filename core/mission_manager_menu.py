@@ -1,6 +1,5 @@
 from core.constants import (
     MODE_MANUAL,
-    MODE_AUTONOMOUS,
     MODE_TAKEOVER,
     DRIVE_MANUAL,
     DRIVE_AUTONOMOUS,
@@ -66,9 +65,6 @@ class MissionManagerMenuMixin:
         self.takeover_controller = None
         if self.selected_mode == MODE_MANUAL:
             self.active_drive_mode = DRIVE_MANUAL
-        elif self.selected_mode == MODE_AUTONOMOUS:
-            self.ensure_autonomous_driver()
-            self.active_drive_mode = DRIVE_AUTONOMOUS
         elif self.selected_mode == MODE_TAKEOVER:
             self.ensure_autonomous_driver()
             self.takeover_controller = TakeoverController(

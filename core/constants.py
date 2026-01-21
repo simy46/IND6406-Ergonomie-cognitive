@@ -1,6 +1,5 @@
 MODE_MANUAL = "manual"
-MODE_AUTONOMOUS = "autonomous"
-MODE_TAKEOVER = "takeover"
+MODE_TAKEOVER = "autonomous"
 
 DRIVE_MANUAL = "manual"
 DRIVE_AUTONOMOUS = "autonomous"

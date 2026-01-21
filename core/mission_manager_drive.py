@@ -1,7 +1,6 @@
 from core.constants import (
     DRIVE_MANUAL,
     DRIVE_AUTONOMOUS,
-    MODE_AUTONOMOUS,
     MODE_TAKEOVER,
 )
 from core.mission import toggle_manual_auto
@@ -45,9 +44,7 @@ class MissionManagerDriveMixin:
                 self.autonomous_driver.run_step()
 
     def _rebuild_autonomy(self):
-        if self.selected_mode == MODE_AUTONOMOUS:
-            self.ensure_autonomous_driver()
-        elif self.selected_mode == MODE_TAKEOVER:
+        if self.selected_mode == MODE_TAKEOVER:
             if self.takeover_controller is not None:
                 self.takeover_controller.auto = AutonomousDriver(self.vehicle, self.route)
                 self.autonomous_driver = self.takeover_controller.auto

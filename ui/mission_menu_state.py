@@ -2,7 +2,6 @@ import pygame
 
 from core.constants import (
     MODE_MANUAL,
-    MODE_AUTONOMOUS,
     MODE_TAKEOVER,
     NBACK_LEVEL,
     NBACK_INTERVAL_SECONDS,
@@ -25,9 +24,8 @@ def init_state(initial_name=""):
 
 def build_modes():
     return [
-        (MODE_MANUAL, "Conduite manuelle"),
-        (MODE_AUTONOMOUS, "Conduite autonome"),
-        (MODE_TAKEOVER, "Takeover (auto + reprise humaine)"),
+        (MODE_MANUAL, "1- Conduite manuelle"),
+        (MODE_TAKEOVER, "2- Conduite autonome"),
     ]
 
 
