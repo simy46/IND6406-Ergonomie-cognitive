@@ -125,14 +125,19 @@ def main():
             # -------------------------
             # EVENTS
             # -------------------------
+            pause_clicks = []
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
 
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_p:
+                    if event.key == pygame.K_ESCAPE:
                         if mission_manager.mission_active:
                             pause_controller.toggle()
+                        continue
+                    if event.key == pygame.K_p:
+                        if mission_manager.mission_active and not pause_controller.paused:
+                            mission_manager.handle_escape()
                         continue
                     if event.key in (pygame.K_LCTRL, pygame.K_RCTRL):
                         hud_visible = not hud_visible
@@ -142,11 +147,10 @@ def main():
                     if event.key == pygame.K_TAB:
                         camera.toggle()
 
-                    elif mission_manager.mission_active and event.key == pygame.K_ESCAPE:
-                        mission_manager.handle_escape()
-
                     elif mission_manager.show_restart_prompt and event.key == pygame.K_SPACE:
                         mission_manager.reset_state_to_menu()
+                elif pause_controller.paused and event.type == pygame.MOUSEBUTTONDOWN:
+                    pause_clicks.append(event.pos)
 
             # =========================
             # MISSION POPUP
@@ -164,7 +168,11 @@ def main():
                         traffic_manager.set_synchronous_mode(False)
 
             if pause_controller.paused:
-                render_pause_screen(screen)
+                pause_button_rect = render_pause_screen(screen)
+                for pos in pause_clicks:
+                    if pause_button_rect and pause_button_rect.collidepoint(pos):
+                        pause_controller.resume()
+                        mission_manager.reset_state_to_menu()
                 pygame.display.flip()
                 continue
 
