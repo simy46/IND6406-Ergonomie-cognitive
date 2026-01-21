@@ -85,6 +85,8 @@ def main():
                 if recording_active and not mission_manager.mission_active:
                     recorder.stop()
                     recording_active = False
+                if recording_active and recorder is not None:
+                    recorder.write_frame(screen)
                 pygame.display.flip()
                 continue
 
