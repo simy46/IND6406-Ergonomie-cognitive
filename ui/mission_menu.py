@@ -243,16 +243,17 @@ def mission_popup(screen, clock):
                 screen.blit(font.render(label, True, color), (POP_X + 80, y_pos))
                 screen.blit(font.render(value, True, value_color), (POP_X + 360, y_pos))
 
-            rounds_text = "Jusqu'à la fin de mission" if nback_rounds is None else str(nback_rounds)
+            rounds_text = "Fin mission" if nback_rounds is None else str(nback_rounds)
             draw_config_line("N-Back niveau", f"{nback_level}", POP_Y + 185, selected_config == 0)
             draw_config_line("Intervalle (s)", f"{nback_interval:.1f}", POP_Y + 235, selected_config == 1)
             draw_config_line("Nombre de tours", rounds_text, POP_Y + 285, selected_config == 2)
 
-            nav_hint = "↑↓ sélection | ←→ ajuster"
-            screen.blit(
-                font_small.render(nav_hint, True, (160, 160, 160)),
-                (POP_X + 80, POP_Y + 345)
+            nav_hint = "UP/DOWN: selection | LEFT/RIGHT: ajuster"
+            nav_surface = font_small.render(nav_hint, True, (160, 160, 160))
+            nav_rect = nav_surface.get_rect(
+                bottomleft=(24, HEIGHT - 44)
             )
+            screen.blit(nav_surface, nav_rect)
 
             back_surface = font_small.render("ESC pour revenir", True, (180, 180, 180))
             back_rect = back_surface.get_rect(
