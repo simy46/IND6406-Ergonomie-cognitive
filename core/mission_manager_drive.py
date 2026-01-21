@@ -16,11 +16,14 @@ class MissionManagerDriveMixin:
             self.autonomous_driver = AutonomousDriver(self.vehicle, self.route)
 
     def handle_escape(self):
-        self.active_drive_mode = toggle_manual_auto(
-            self.active_drive_mode,
-            self.ensure_autonomous_driver,
-            self.takeover_controller,
-        )
+        if self.selected_mode == MODE_TAKEOVER and self.takeover_controller is not None:
+            self.active_drive_mode = self.takeover_controller.toggle_mode(self.active_drive_mode)
+        else:
+            self.active_drive_mode = toggle_manual_auto(
+                self.active_drive_mode,
+                self.ensure_autonomous_driver,
+                self.takeover_controller,
+            )
         if self.telemetry is not None:
             self.telemetry.record_mode_switch()
 
@@ -28,10 +31,6 @@ class MissionManagerDriveMixin:
         if not self.mission_active:
             return
         if self.selected_mode == MODE_TAKEOVER and self.takeover_controller is not None:
-            if self.takeover_controller.should_request_manual():
-                if self.active_drive_mode != DRIVE_MANUAL:
-                    self.active_drive_mode = DRIVE_MANUAL
-                    print("[TAKEOVER] Switching to MANUAL (requested)")
             if self.active_drive_mode == DRIVE_AUTONOMOUS:
                 self.takeover_controller.update_auto_only()
             else:
