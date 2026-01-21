@@ -41,6 +41,10 @@ def main():
             if pause_controller.telemetry is not mission_manager.telemetry:
                 pause_controller.set_telemetry(mission_manager.telemetry)
 
+            if mission_manager.in_menu:
+                if not mission_manager.run_menu(screen, clock):
+                    break
+
             events = pygame.event.get()
             running, hud_visible, pause_clicks = process_events(
                 events,
@@ -49,10 +53,6 @@ def main():
                 camera,
                 hud_visible,
             )
-
-            if mission_manager.in_menu:
-                if not mission_manager.run_menu(screen, clock):
-                    break
             if sync_enabled and mission_manager.mission_active and not pause_controller.paused:
                 try:
                     world.tick()
