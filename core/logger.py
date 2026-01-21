@@ -23,13 +23,14 @@ MISSION_FIELDNAMES = [
 ]
 
 NBACK_FIELDNAMES = [
-    "nback_level",
-    "nback_total_trials",
-    "nback_targets_count",
-    "nback_hits",
-    "nback_misses",
-    "nback_false_alarms",
-    "nback_correct_rejections",
+    "nback_N",
+    "nback_total_stimuli",
+    "nback_true_targets",
+    "user_total_clicks",
+    "pourcentage_correct_clicks",
+    "pourcentage_error_clicks",
+    "pourcentage_neutral_clicks",
+    "avg_reaction_time_s",
 ]
 
 
@@ -92,7 +93,40 @@ def append_row(metrics, csv_path=None):
                 metrics.get("timestamp", ""),
             )
         mission_stats = {k: metrics.get(k) for k in MISSION_FIELDNAMES}
-        nback_stats = {k: metrics.get(k) for k in NBACK_FIELDNAMES}
+
+        nback_level = metrics.get("nback_level", 0)
+        total_stimuli = metrics.get("nback_total_trials", 0)
+        true_targets = metrics.get("nback_targets_count", 0)
+        hits = metrics.get("nback_hits", 0)
+        false_alarms = metrics.get("nback_false_alarms", 0)
+        total_clicks = metrics.get("nback_total_clicks", 0)
+        neutral_clicks = metrics.get("nback_neutral_clicks", 0)
+        reaction_times = metrics.get("nback_reaction_times", [])
+
+        non_targets = max(0, total_stimuli - true_targets)
+        correct_clicks_pct = 0.0
+        if true_targets > 0:
+            correct_clicks_pct = (hits / true_targets) * 100.0
+        error_clicks_pct = 0.0
+        if non_targets > 0:
+            error_clicks_pct = (false_alarms / non_targets) * 100.0
+        neutral_clicks_pct = 0.0
+        if total_clicks > 0:
+            neutral_clicks_pct = (neutral_clicks / total_clicks) * 100.0
+        avg_reaction_time = ""
+        if reaction_times:
+            avg_reaction_time = sum(reaction_times) / len(reaction_times)
+
+        nback_stats = {
+            "nback_N": nback_level,
+            "nback_total_stimuli": total_stimuli,
+            "nback_true_targets": true_targets,
+            "user_total_clicks": total_clicks,
+            "pourcentage_correct_clicks": correct_clicks_pct,
+            "pourcentage_error_clicks": error_clicks_pct,
+            "pourcentage_neutral_clicks": neutral_clicks_pct,
+            "avg_reaction_time_s": avg_reaction_time,
+        }
         _write_csv(trial_dir / "mission_stats.csv", MISSION_FIELDNAMES, mission_stats)
         _write_csv(trial_dir / "nback.csv", NBACK_FIELDNAMES, nback_stats)
     except Exception as e:

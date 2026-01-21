@@ -16,6 +16,8 @@ class SpatialNBackTask:
         self.false_alarms = 0
         self.correct_rejections = 0
         self.reaction_times = []
+        self.total_clicks = 0
+        self.neutral_clicks = 0
 
         self.current_position = None
         self.current_is_target = False
@@ -71,6 +73,7 @@ class SpatialNBackTask:
             self._start_trial(elapsed_seconds)
             return
         if user_clicked:
+            self.total_clicks += 1
             if not self.current_clicked:
                 self.current_clicked = True
                 self.last_response_time = elapsed_seconds
@@ -82,6 +85,7 @@ class SpatialNBackTask:
                 self.last_response_time = elapsed_seconds
                 self.last_response_was_target = None
                 self.last_response_kind = "neutral"
+                self.neutral_clicks += 1
         if (elapsed_seconds - self.current_start_time) >= self.interval_seconds:
             self._finalize_current_trial()
             if self.trials_presented >= self.total_trials:
@@ -105,4 +109,7 @@ class SpatialNBackTask:
             "nback_misses": self.misses,
             "nback_false_alarms": self.false_alarms,
             "nback_correct_rejections": self.correct_rejections,
+            "nback_total_clicks": self.total_clicks,
+            "nback_neutral_clicks": self.neutral_clicks,
+            "nback_reaction_times": list(self.reaction_times),
         }

@@ -50,6 +50,9 @@ class TelemetryFinalizeMixin:
                     "nback_misses": 0,
                     "nback_false_alarms": 0,
                     "nback_correct_rejections": 0,
+                    "nback_total_clicks": 0,
+                    "nback_neutral_clicks": 0,
+                    "nback_reaction_times": [],
                 }
             )
         return metrics
