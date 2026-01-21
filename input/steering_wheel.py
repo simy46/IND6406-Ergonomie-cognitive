@@ -29,8 +29,8 @@ class SteeringWheel:
         steer = self.joy.get_axis(0)
 
         accel_raw = self.joy.get_axis(1)   # pédale droite
-        brake_raw = self.joy.get_axis(2)   # pédale milieu
-        reverse_raw = self.joy.get_axis(3) # pédale gauche
+        brake_raw = self.joy.get_axis(3)   # pédale gauche
+        reverse_raw = self.joy.get_axis(2) # pédale milieu
 
         throttle = self._normalize_pedal(accel_raw)
         brake = self._normalize_pedal(brake_raw)
