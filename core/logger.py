@@ -106,16 +106,16 @@ def append_row(metrics, csv_path=None):
         non_targets = max(0, total_stimuli - true_targets)
         correct_clicks_pct = 0.0
         if true_targets > 0:
-            correct_clicks_pct = (hits / true_targets) * 100.0
+            correct_clicks_pct = round((hits / true_targets) * 100.0, 2)
         error_clicks_pct = 0.0
         if non_targets > 0:
-            error_clicks_pct = (false_alarms / non_targets) * 100.0
+            error_clicks_pct = round((false_alarms / non_targets) * 100.0, 2)
         neutral_clicks_pct = 0.0
         if total_clicks > 0:
-            neutral_clicks_pct = (neutral_clicks / total_clicks) * 100.0
+            neutral_clicks_pct = round((neutral_clicks / total_clicks) * 100.0, 2)
         avg_reaction_time = ""
         if reaction_times:
-            avg_reaction_time = sum(reaction_times) / len(reaction_times)
+            avg_reaction_time = round(sum(reaction_times) / len(reaction_times), 2)
 
         nback_stats = {
             "nback_N": nback_level,
