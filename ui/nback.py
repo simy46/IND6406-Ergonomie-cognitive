@@ -17,12 +17,13 @@ def render_nback(screen, task, elapsed_seconds=None):
     x_start = width - padding - total_width
     y_start = padding
 
-    panel_w = total_width + 16
-    panel_h = box_size + 18
+    panel_w = total_width + 28
+    panel_h = int(box_size * 1.75)
     panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
     panel.fill((0, 0, 0, 0))
     pygame.draw.rect(panel, (0, 0, 0, 140), panel.get_rect(), border_radius=8)
-    screen.blit(panel, (x_start - 8, y_start - 8))
+    panel_y = y_start - ((panel_h - box_size) // 2) - 8
+    screen.blit(panel, (x_start - 14, panel_y))
 
     base_color = (30, 30, 32)
     outline = (200, 200, 200)
