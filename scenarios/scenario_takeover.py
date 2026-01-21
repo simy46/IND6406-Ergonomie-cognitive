@@ -34,7 +34,6 @@ class TakeoverController:
         self.sound_enabled = load_sound(sound_enabled)
         self.sound_disabled = load_sound(sound_disabled)
 
-        self.play_noa_enabled()
         print("[TAKEOVER] Autonomous ENABLED")
 
     # -------------------------
