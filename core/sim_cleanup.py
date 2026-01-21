@@ -12,6 +12,7 @@ def cleanup_simulation(
 ):
     try:
         if mission_manager is not None:
+            mission_manager.finalize_if_active()
             mission_manager.traffic_controller.destroy_all()
             if mission_manager.telemetry is not None:
                 mission_manager.telemetry.cleanup()

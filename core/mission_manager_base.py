@@ -93,6 +93,18 @@ class MissionManagerBase:
         )
         print("[MISSION] Returning to menu")
 
+    def finalize_if_active(self):
+        was_active = self.mission_active
+        should_log = was_active and not self.show_restart_prompt
+        if should_log and self.telemetry is not None:
+            from core.logger import append_row
+
+            metrics = self.telemetry.finalize()
+            append_row(metrics)
+            self.telemetry.cleanup()
+            self.telemetry.pause()
+            self.telemetry = None
+
     def update_telemetry(self, dt, nback_click=False):
         if self.mission_active and self.telemetry is not None:
             self.telemetry.update(self.active_drive_mode, dt, nback_click=nback_click)
