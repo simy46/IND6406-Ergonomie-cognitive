@@ -3,9 +3,18 @@ import carla
 
 def draw_route(world, route, life_time=1.1):
     for wp, _ in route:
-        world.debug.draw_point(
-            wp.transform.location + carla.Location(z=0.3),
-            size=0.07,
+        start = wp.transform.location + carla.Location(z=0.35)
+        forward = wp.transform.get_forward_vector()
+        end = start + carla.Location(
+            x=forward.x * 0.8,
+            y=forward.y * 0.8,
+            z=forward.z * 0.2,
+        )
+        world.debug.draw_arrow(
+            start,
+            end,
+            thickness=0.05,
+            arrow_size=0.08,
             color=carla.Color(0, 150, 255),
             life_time=life_time
         )
