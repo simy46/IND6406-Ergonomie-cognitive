@@ -84,7 +84,7 @@ def draw_stats_blocks(screen, telemetry, font, font_small, content_x, content_y,
 def draw_timer_distance(screen, telemetry, timer_text):
     timer_big = pygame.font.SysFont(None, 48).render(timer_text, True, SPEED_COLOR)
     time_rect = timer_big.get_rect(bottomright=(screen.get_width() - 20, screen.get_height() - 20))
-    screen.blit(timer_big, time_rect)
+    # screen.blit(timer_big, time_rect)
     distance_big = pygame.font.SysFont(None, 38).render(
         f"{telemetry.distance_traveled_meters:.1f} m",
         True,
